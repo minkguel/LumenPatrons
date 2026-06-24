@@ -1,4 +1,3 @@
-// TODO: Test if program runs
 using LumenPatrons.Api.Data;
 using Microsoft.EntityFrameworkCore;
 
@@ -22,14 +21,9 @@ builder.Services.AddCors(options =>
 // Add services to the container.
 builder.Services.AddOpenApi();
 
-builder.Services.AddControllers();
-
-
 var app = builder.Build();
 
 app.UseCors("AllowNextJs");
-
-app.MapControllers();
 
 app.MapGet("/api/v1/status", async (AppDbContext db) =>
 {
