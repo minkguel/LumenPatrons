@@ -6,6 +6,8 @@ Supabase
 
 Next.js
 
+React
+
 TypeScript 7
 
 C#
