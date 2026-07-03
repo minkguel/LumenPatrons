@@ -15,9 +15,9 @@ export function Sidebar({ systemStatus }: SidebarProps) {
           <Image
             src="/LumenPatronsLogo.png"
             alt="LumenPatrons"
-            width={160}
-            height={60}
-            className="object-contain"
+            width={500}
+            height={300}
+            style={{ objectFit: "contain" }}
             priority
           />
         </div>

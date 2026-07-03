@@ -1,20 +1,20 @@
 {
   "format": 1,
   "restore": {
-    "/app/server/LumenPatrons.Api.csproj": {}
+    "C:\\Users\\mikke\\Documents\\GitHub\\LumenPatrons\\server\\LumenPatrons.Api.csproj": {}
   },
   "projects": {
-    "/app/server/LumenPatrons.Api.csproj": {
+    "C:\\Users\\mikke\\Documents\\GitHub\\LumenPatrons\\server\\LumenPatrons.Api.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "/app/server/LumenPatrons.Api.csproj",
+        "projectUniqueName": "C:\\Users\\mikke\\Documents\\GitHub\\LumenPatrons\\server\\LumenPatrons.Api.csproj",
         "projectName": "LumenPatrons.Api",
-        "projectPath": "/app/server/LumenPatrons.Api.csproj",
-        "packagesPath": "/root/.nuget/packages/",
-        "outputPath": "/app/server/obj/",
+        "projectPath": "C:\\Users\\mikke\\Documents\\GitHub\\LumenPatrons\\server\\LumenPatrons.Api.csproj",
+        "packagesPath": "C:\\Users\\mikke\\.nuget\\packages\\",
+        "outputPath": "C:\\Users\\mikke\\Documents\\GitHub\\LumenPatrons\\server\\obj\\",
         "projectStyle": "PackageReference",
         "configFilePaths": [
-          "/root/.nuget/NuGet/NuGet.Config"
+          "C:\\Users\\mikke\\AppData\\Roaming\\NuGet\\NuGet.Config"
         ],
         "originalTargetFrameworks": [
           "net10.0"
@@ -80,7 +80,7 @@
               "privateAssets": "all"
             }
           },
-          "runtimeIdentifierGraphPath": "/usr/share/dotnet/sdk/10.0.301/PortableRuntimeIdentifierGraph.json",
+          "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\10.0.300/PortableRuntimeIdentifierGraph.json",
           "packagesToPrune": {
             "Microsoft.AspNetCore": "(,10.0.32767]",
             "Microsoft.AspNetCore.Antiforgery": "(,10.0.32767]",
