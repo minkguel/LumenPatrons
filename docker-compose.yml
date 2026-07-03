@@ -9,6 +9,7 @@ services:
       - "3000:3000"
     environment:
       - WATCHPACK_POLLING=true
+      - NEXT_PUBLIC_API_URL=http://localhost:5083
     command: sh -c "npm install && npm run dev"
 
   server:
@@ -17,9 +18,11 @@ services:
     volumes:
       - .:/app
     ports:
-      - "5000:8080"
+      - "5083:8080"
     environment:
       - ASPNETCORE_ENVIRONMENT=Development
+      - ASPNETCORE_URLS=http://0.0.0.0:8080
+      - DOTNET_URLS=http://0.0.0.0:8080
     command: dotnet watch run --urls "http://0.0.0.0:8080"
 
 volumes:
