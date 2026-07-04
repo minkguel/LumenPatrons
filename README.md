@@ -191,3 +191,7 @@ Security note: do not commit production secrets to the repository. Use environme
 - Docker compose: `docker-compose.yml`
 
 ---
+
+RUN PYTHON VENV
+cd C:\Users\mikke\Documents\GitHub\LumenPatrons\scraper
+.\venv\Scripts\Activate.ps1
