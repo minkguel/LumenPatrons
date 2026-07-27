@@ -1,5 +1,36 @@
-scraper/venv/
-__pycache__/
-*.pyc
+# Build output
+bin/
+obj/
+obj/Debug/
 
-server/bin/Debug/net10.0/obj/
+# .NET
+*.user
+*.suo
+*.cache
+*.dll
+*.exe
+*.pdb
+
+# Secrets — never commit real credentials
+.env
+.env.*
+!.env.example
+
+# IDE
+.vs/
+.vscode/
+*.swp
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Node (client/)
+client/node_modules/
+client/.next/
+client/out/
+
+# Python (scraper/)
+scraper/venv/
+scraper/__pycache__/
+scraper/.scrapy/
