@@ -155,6 +155,7 @@ C:/Users/MikkelØstvandPederse/LumenPatrons/server/obj/Debug/net10.0/ref/LumenPa
 /app/server/bin/Debug/net10.0/tr/Microsoft.CodeAnalysis.Workspaces.MSBuild.resources.dll
 /app/server/bin/Debug/net10.0/zh-Hans/Microsoft.CodeAnalysis.Workspaces.MSBuild.resources.dll
 /app/server/bin/Debug/net10.0/zh-Hant/Microsoft.CodeAnalysis.Workspaces.MSBuild.resources.dll
+<<<<<<< HEAD
 C:/Users/MikkelØstvandPederse/LumenPatrons/server/bin/Debug/net10.0/Humanizer.dll
 C:/Users/MikkelØstvandPederse/LumenPatrons/server/bin/Debug/net10.0/Microsoft.Build.Framework.dll
 C:/Users/MikkelØstvandPederse/LumenPatrons/server/bin/Debug/net10.0/Microsoft.CodeAnalysis.dll
@@ -367,3 +368,5 @@ C:\Users\mikke\Documents\GitHub\LumenPatrons\server\obj\Debug\net10.0\refint\Lum
 C:\Users\mikke\Documents\GitHub\LumenPatrons\server\obj\Debug\net10.0\LumenPatrons.Api.pdb
 C:\Users\mikke\Documents\GitHub\LumenPatrons\server\obj\Debug\net10.0\LumenPatrons.Api.genruntimeconfig.cache
 C:\Users\mikke\Documents\GitHub\LumenPatrons\server\obj\Debug\net10.0\ref\LumenPatrons.Api.dll
+=======
+>>>>>>> 92459e8 (base set up)

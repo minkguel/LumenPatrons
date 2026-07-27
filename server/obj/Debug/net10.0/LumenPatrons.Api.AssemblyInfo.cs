@@ -13,7 +13,11 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("LumenPatrons.Api")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+fc8480d150ed89eb0213ef4bbd67fb426950941a")]
+<<<<<<< HEAD
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+fe3bcdd721745df73a49e4de0b3de3d8d29608b4")]
+=======
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+df5e304a02ebb0a5f5e7170dc7480c7e67e06622")]
+>>>>>>> 92459e8 (base set up)
 [assembly: System.Reflection.AssemblyProductAttribute("LumenPatrons.Api")]
 [assembly: System.Reflection.AssemblyTitleAttribute("LumenPatrons.Api")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]
