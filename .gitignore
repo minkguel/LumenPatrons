@@ -16,6 +16,9 @@ obj/Debug/
 .env.*
 !.env.example
 
+# Local development settings (contains real connection strings)
+server/appsettings.Development.json
+
 # IDE
 .vs/
 .vscode/

@@ -25,8 +25,7 @@ export type FundingOpportunity = {
   id: string;
   title: string;
   patronName: string;
-  description?: string;
-  category?: string;
+  category?: string[];
   minimumAmount?: number | null;
   deadline?: string; // ISO string from backend
   externalUrl?: string;

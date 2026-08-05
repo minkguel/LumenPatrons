@@ -25,7 +25,7 @@ public class FundingOpportunitiesController : ControllerBase
         var query = _db.FundingOpportunities.AsQueryable();
 
         if (!string.IsNullOrEmpty(category))
-            query = query.Where(f => f.Category == category);
+            query = query.Where(f => f.Category != null && f.Category.Contains(category));
 
         if (premiumOnly.HasValue)
             query = query.Where(f => f.IsPremiumOnly == premiumOnly.Value);
