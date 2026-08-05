@@ -20,10 +20,9 @@ public class FundingOpportunity
     [Key] public Guid Id { get; set; }
     [Required, MaxLength(200)] public string Title { get; set; } = string.Empty;
     [Required, MaxLength(150)] public string PatronName { get; set; } = string.Empty;
-    public string Description { get; set; } = string.Empty;
-    public string Category { get; set; } = string.Empty;
+    public List<string> Category { get; set; } = new List<string>();
     [Column(TypeName = "decimal(18,2)")] public decimal? MinimumAmount { get; set; }
-    public DateTime Deadline { get; set; }
+    public DateTime? Deadline { get; set; }
     public string ExternalUrl { get; set; } = string.Empty;
     public bool IsPremiumOnly { get; set; } = false;
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;

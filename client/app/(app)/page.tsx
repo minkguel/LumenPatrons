@@ -77,7 +77,7 @@ export default function Home() {
             {patrons.map((patron) => (
               <Card key={patron.id} hover>
                 <div className="flex justify-between items-start mb-4">
-                  <Badge>{patron.category ?? "General"}</Badge>
+                  <Badge>{patron.category?.length ? patron.category.join(", ") : "General"}</Badge>
                   <span className="text-foreground/40 text-sm group-hover:text-patron-gold transition-colors">
                     {patron.isPremiumOnly ? "Premium" : "Grant"}
                   </span>
@@ -86,7 +86,7 @@ export default function Home() {
                   {patron.title}
                 </h3>
                 <p className="text-sm text-foreground/55 mb-4 line-clamp-2">
-                  {patron.description}
+                  {patron.patronName}
                 </p>
                 <div className="flex justify-between items-center text-sm border-t border-lumen-teal/10 pt-4">
                   <span className="text-patron-gold font-semibold">
