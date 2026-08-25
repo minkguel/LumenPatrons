@@ -10,4 +10,15 @@ public class AppDbContext : DbContext
     public DbSet<UserProfile> UserProfiles { get; set; }
     public DbSet<FundingOpportunity> FundingOpportunities { get; set; }
     public DbSet<SavedOpportunity> SavedOpportunities { get; set; }
+
+    protected override void OnModelCreating(ModelBuilder modelBuilder)
+    {
+        modelBuilder.Entity<UserProfile>()
+            .HasIndex(user => user.Email)
+            .IsUnique();
+
+        modelBuilder.Entity<SavedOpportunity>()
+            .HasIndex(saved => new { saved.UserId, saved.FundingOpportunityId })
+            .IsUnique();
+    }
 }
