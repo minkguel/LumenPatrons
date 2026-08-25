@@ -1,0 +1,61 @@
+name: Security tests
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: security-tests-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  DOTNET_CLI_TELEMETRY_OPTOUT: "1"
+  DOTNET_NOLOGO: "1"
+
+jobs:
+  api-security:
+    name: API authorization tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+
+      - name: Set up .NET 10
+        uses: actions/setup-dotnet@a98b56852c35b8e3190ac28c8c2271da59106c68 # v6
+        with:
+          dotnet-version: 10.0.x
+
+      - name: Restore dependencies
+        run: dotnet restore server.tests/LumenPatrons.Api.Tests.csproj
+
+      - name: Build with warnings as errors
+        run: >-
+          dotnet build server.tests/LumenPatrons.Api.Tests.csproj
+          --configuration Release
+          --no-restore
+          --warnaserror
+
+      - name: Run security tests
+        run: >-
+          dotnet test server.tests/LumenPatrons.Api.Tests.csproj
+          --configuration Release
+          --no-build
+          --logger "console;verbosity=normal"
+          --collect:"XPlat Code Coverage"
+
+      - name: Upload coverage report
+        if: always()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
+        with:
+          name: api-security-coverage
+          path: server.tests/TestResults/**/coverage.cobertura.xml
+          if-no-files-found: warn
+          retention-days: 7
