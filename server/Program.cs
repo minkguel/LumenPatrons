@@ -93,3 +93,5 @@ app.MapGet("/api/v1/status", async (AppDbContext db) =>
 app.UseHttpsRedirection();
 
 app.Run();
+
+public partial class Program;

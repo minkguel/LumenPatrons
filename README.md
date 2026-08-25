@@ -142,6 +142,18 @@ Example environment variables (recommended)
 
 Security note: do not commit production secrets to the repository. Use environment variables, a secrets store, or a local `.env` (gitignored).
 
+## Security tests
+
+The API security integration tests use an isolated in-memory database and a test-only authentication handler. They never connect to Supabase and require no secrets, which makes them suitable for GitHub Actions.
+
+Run the suite from the repository root:
+
+```bash
+dotnet test server.tests/LumenPatrons.Api.Tests.csproj --collect:"XPlat Code Coverage"
+```
+
+The suite currently verifies anonymous rejection, owner isolation for saved opportunities, protection against user-ID spoofing, and the admin policy for funding mutations. Coverage is written as Cobertura XML under `server.tests/TestResults/`.
+
 ---
 
 ## Current status

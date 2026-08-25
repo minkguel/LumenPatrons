@@ -22,10 +22,10 @@ public record SavedOpportunityResponse(
 
 public sealed record CreateSavedOpportunityRequest(
     Guid FundingOpportunityId,
-    [property: MaxLength(50)] string Status = "Saved");
+    [param: MaxLength(50)] string Status = "Saved");
 
 public sealed record UpdateSavedOpportunityRequest(
-    [property: Required, MaxLength(50)] string Status,
+    [param: Required, MaxLength(50)] string Status,
     string? AttachedDocumentUrl);
 
 public record UserProfileResponse(
@@ -37,8 +37,8 @@ public record UserProfileResponse(
     DateTime CreatedAt);
 
 public sealed record UpdateUserProfileRequest(
-    [property: Required, MaxLength(100)] string FullName,
-    [property: Required, MaxLength(50)] string UserType);
+    [param: Required, MaxLength(100)] string FullName,
+    [param: Required, MaxLength(50)] string UserType);
 
 public static class ContractMappings
 {
