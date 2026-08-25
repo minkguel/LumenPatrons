@@ -1,5 +1,7 @@
 using LumenPatrons.Api.Data;
 using LumenPatrons.Api.Models;
+using LumenPatrons.Api.Contracts;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
@@ -18,7 +20,8 @@ public class FundingOpportunitiesController : ControllerBase
 
     // GET: api/v1/fundingopportunities
     [HttpGet]
-    public async Task<ActionResult<IEnumerable<FundingOpportunity>>> GetAll(
+    [AllowAnonymous]
+    public async Task<ActionResult<IEnumerable<FundingOpportunityResponse>>> GetAll(
         [FromQuery] string? category = null,
         [FromQuery] bool? premiumOnly = null)
     {
@@ -30,22 +33,26 @@ public class FundingOpportunitiesController : ControllerBase
         if (premiumOnly.HasValue)
             query = query.Where(f => f.IsPremiumOnly == premiumOnly.Value);
 
-        return await query.OrderByDescending(f => f.CreatedAt).ToListAsync();
+        var opportunities = await query.AsNoTracking()
+            .OrderByDescending(f => f.CreatedAt).ToListAsync();
+        return Ok(opportunities.Select(item => item.ToResponse()));
     }
 
     // GET: api/v1/fundingopportunities/{id}
     [HttpGet("{id}")]
-    public async Task<ActionResult<FundingOpportunity>> GetById(Guid id)
+    [AllowAnonymous]
+    public async Task<ActionResult<FundingOpportunityResponse>> GetById(Guid id)
     {
         var opportunity = await _db.FundingOpportunities.FindAsync(id);
         if (opportunity == null)
             return NotFound();
 
-        return opportunity;
+        return opportunity.ToResponse();
     }
 
     // POST: api/v1/fundingopportunities
     [HttpPost]
+    [Authorize(Policy = "AdminOnly")]
     public async Task<ActionResult<FundingOpportunity>> Create(FundingOpportunity opportunity)
     {
         opportunity.Id = Guid.NewGuid();
@@ -59,6 +66,7 @@ public class FundingOpportunitiesController : ControllerBase
 
     // PUT: api/v1/fundingopportunities/{id}
     [HttpPut("{id}")]
+    [Authorize(Policy = "AdminOnly")]
     public async Task<IActionResult> Update(Guid id, FundingOpportunity opportunity)
     {
         if (id != opportunity.Id)
@@ -82,6 +90,7 @@ public class FundingOpportunitiesController : ControllerBase
 
     // DELETE: api/v1/fundingopportunities/{id}
     [HttpDelete("{id}")]
+    [Authorize(Policy = "AdminOnly")]
     public async Task<IActionResult> Delete(Guid id)
     {
         var opportunity = await _db.FundingOpportunities.FindAsync(id);

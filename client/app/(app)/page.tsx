@@ -36,7 +36,6 @@ export default function Home() {
 
   useEffect(() => {
     let mounted = true;
-    setLoading(true);
     getFundingOpportunities()
       .then((data) => {
         if (!mounted) return;

@@ -44,3 +44,17 @@ export async function getFundingOpportunities(): Promise<FundingOpportunity[]> {
     return [];
   }
 }
+
+export async function authorizedFetch(path: string, init: RequestInit = {}) {
+  const accessToken = await getAccessToken();
+  if (!accessToken) throw new Error("You must be signed in to perform this action.");
+
+  const headers = new Headers(init.headers);
+  headers.set("Authorization", `Bearer ${accessToken}`);
+  if (init.body && !headers.has("Content-Type")) {
+    headers.set("Content-Type", "application/json");
+  }
+
+  return fetch(`${API_BASE}${path}`, { ...init, headers, cache: "no-store" });
+}
+import { getAccessToken } from "@/lib/auth";

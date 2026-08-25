@@ -1,94 +1,94 @@
+using LumenPatrons.Api.Auth;
+using LumenPatrons.Api.Contracts;
 using LumenPatrons.Api.Data;
 using LumenPatrons.Api.Models;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
 namespace LumenPatrons.Api.Controllers;
 
 [ApiController]
-[Route("api/v1/[controller]")]
+[Authorize]
+[Route("api/v1/savedopportunities")]
 public class SavedOpportunitiesController : ControllerBase
 {
+    private static readonly HashSet<string> AllowedStatuses =
+        new(StringComparer.OrdinalIgnoreCase) { "Saved", "Applied", "Submitted" };
     private readonly AppDbContext _db;
 
-    public SavedOpportunitiesController(AppDbContext db)
+    public SavedOpportunitiesController(AppDbContext db) => _db = db;
+
+    [HttpGet]
+    public async Task<ActionResult<IEnumerable<SavedOpportunityResponse>>> GetMine()
     {
-        _db = db;
+        var userId = User.GetRequiredUserId();
+        var saved = await _db.SavedOpportunities.AsNoTracking()
+            .Include(item => item.Opportunity)
+            .Where(item => item.UserId == userId)
+            .OrderByDescending(item => item.SavedAt).ToListAsync();
+        return Ok(saved.Select(item => item.ToResponse()));
     }
 
-    // GET: api/v1/savedopportunities/user/{userId}
-    [HttpGet("user/{userId}")]
-    public async Task<ActionResult<IEnumerable<SavedOpportunity>>> GetByUserId(Guid userId)
+    [HttpGet("{id:guid}")]
+    public async Task<ActionResult<SavedOpportunityResponse>> GetById(Guid id)
     {
-        return await _db.SavedOpportunities
-            .Include(s => s.Opportunity)
-            .Where(s => s.UserId == userId)
-            .OrderByDescending(s => s.SavedAt)
-            .ToListAsync();
+        var userId = User.GetRequiredUserId();
+        var saved = await _db.SavedOpportunities.AsNoTracking()
+            .Include(item => item.Opportunity)
+            .FirstOrDefaultAsync(item => item.Id == id && item.UserId == userId);
+        return saved is null ? NotFound() : Ok(saved.ToResponse());
     }
 
-    // GET: api/v1/savedopportunities/{id}
-    [HttpGet("{id}")]
-    public async Task<ActionResult<SavedOpportunity>> GetById(Guid id)
-    {
-        var saved = await _db.SavedOpportunities
-            .Include(s => s.Opportunity)
-            .Include(s => s.User)
-            .FirstOrDefaultAsync(s => s.Id == id);
-
-        if (saved == null)
-            return NotFound();
-
-        return saved;
-    }
-
-    // POST: api/v1/savedopportunities
     [HttpPost]
-    public async Task<ActionResult<SavedOpportunity>> Create(SavedOpportunity saved)
+    public async Task<ActionResult<SavedOpportunityResponse>> Create(CreateSavedOpportunityRequest request)
     {
-        saved.Id = Guid.NewGuid();
-        saved.SavedAt = DateTime.UtcNow;
+        var userId = User.GetRequiredUserId();
+        if (!AllowedStatuses.Contains(request.Status))
+            return ValidationProblem("Status must be Saved, Applied, or Submitted.");
+        if (!await _db.UserProfiles.AnyAsync(user => user.Id == userId))
+            return Conflict("Create your user profile before saving opportunities.");
 
+        var opportunity = await _db.FundingOpportunities.FindAsync(request.FundingOpportunityId);
+        if (opportunity is null) return NotFound("Funding opportunity not found.");
+        if (await _db.SavedOpportunities.AnyAsync(item => item.UserId == userId &&
+                item.FundingOpportunityId == request.FundingOpportunityId))
+            return Conflict("This funding opportunity is already saved.");
+
+        var saved = new SavedOpportunity
+        {
+            Id = Guid.NewGuid(), UserId = userId, FundingOpportunityId = opportunity.Id,
+            Opportunity = opportunity, Status = request.Status, SavedAt = DateTime.UtcNow
+        };
         _db.SavedOpportunities.Add(saved);
         await _db.SaveChangesAsync();
-
-        return CreatedAtAction(nameof(GetById), new { id = saved.Id }, saved);
+        return CreatedAtAction(nameof(GetById), new { id = saved.Id }, saved.ToResponse());
     }
 
-    // PUT: api/v1/savedopportunities/{id}
-    [HttpPut("{id}")]
-    public async Task<IActionResult> Update(Guid id, SavedOpportunity saved)
+    [HttpPut("{id:guid}")]
+    public async Task<IActionResult> Update(Guid id, UpdateSavedOpportunityRequest request)
     {
-        if (id != saved.Id)
-            return BadRequest();
-
-        _db.Entry(saved).State = EntityState.Modified;
-
-        try
-        {
-            await _db.SaveChangesAsync();
-        }
-        catch (DbUpdateConcurrencyException)
-        {
-            if (!await _db.SavedOpportunities.AnyAsync(s => s.Id == id))
-                return NotFound();
-            throw;
-        }
-
+        var userId = User.GetRequiredUserId();
+        if (!AllowedStatuses.Contains(request.Status))
+            return ValidationProblem("Status must be Saved, Applied, or Submitted.");
+        var saved = await _db.SavedOpportunities
+            .FirstOrDefaultAsync(item => item.Id == id && item.UserId == userId);
+        if (saved is null) return NotFound();
+        saved.Status = request.Status;
+        saved.AttachedDocumentUrl = request.AttachedDocumentUrl;
+        await _db.SaveChangesAsync();
         return NoContent();
     }
 
-    // DELETE: api/v1/savedopportunities/{id}
-    [HttpDelete("{id}")]
+    [HttpDelete("{id:guid}")]
     public async Task<IActionResult> Delete(Guid id)
     {
-        var saved = await _db.SavedOpportunities.FindAsync(id);
-        if (saved == null)
-            return NotFound();
-
+        var userId = User.GetRequiredUserId();
+        var saved = await _db.SavedOpportunities
+            .FirstOrDefaultAsync(item => item.Id == id && item.UserId == userId);
+        if (saved is null) return NotFound();
         _db.SavedOpportunities.Remove(saved);
         await _db.SaveChangesAsync();
-
         return NoContent();
     }
 }

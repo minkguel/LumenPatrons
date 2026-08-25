@@ -1,86 +1,60 @@
+using LumenPatrons.Api.Auth;
+using LumenPatrons.Api.Contracts;
 using LumenPatrons.Api.Data;
 using LumenPatrons.Api.Models;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
 namespace LumenPatrons.Api.Controllers;
 
 [ApiController]
-[Route("api/v1/[controller]")]
+[Authorize]
+[Route("api/v1/userprofiles")]
 public class UserProfilesController : ControllerBase
 {
     private readonly AppDbContext _db;
+    public UserProfilesController(AppDbContext db) => _db = db;
 
-    public UserProfilesController(AppDbContext db)
+    [HttpGet("me")]
+    public async Task<ActionResult<UserProfileResponse>> GetMe()
     {
-        _db = db;
+        var userId = User.GetRequiredUserId();
+        var profile = await _db.UserProfiles.AsNoTracking()
+            .FirstOrDefaultAsync(user => user.Id == userId);
+        return profile is null ? NotFound() : Ok(profile.ToResponse());
     }
 
-    // GET: api/v1/userprofiles
-    [HttpGet]
-    public async Task<ActionResult<IEnumerable<UserProfile>>> GetAll()
+    [HttpPut("me")]
+    public async Task<ActionResult<UserProfileResponse>> UpsertMe(UpdateUserProfileRequest request)
     {
-        return await _db.UserProfiles.ToListAsync();
-    }
-
-    // GET: api/v1/userprofiles/{id}
-    [HttpGet("{id}")]
-    public async Task<ActionResult<UserProfile>> GetById(Guid id)
-    {
-        var user = await _db.UserProfiles.FindAsync(id);
-        if (user == null)
-            return NotFound();
-
-        return user;
-    }
-
-    // POST: api/v1/userprofiles
-    [HttpPost]
-    public async Task<ActionResult<UserProfile>> Create(UserProfile user)
-    {
-        user.Id = Guid.NewGuid();
-        user.CreatedAt = DateTime.UtcNow;
-
-        _db.UserProfiles.Add(user);
-        await _db.SaveChangesAsync();
-
-        return CreatedAtAction(nameof(GetById), new { id = user.Id }, user);
-    }
-
-    // PUT: api/v1/userprofiles/{id}
-    [HttpPut("{id}")]
-    public async Task<IActionResult> Update(Guid id, UserProfile user)
-    {
-        if (id != user.Id)
-            return BadRequest();
-
-        _db.Entry(user).State = EntityState.Modified;
-
-        try
+        var userId = User.GetRequiredUserId();
+        var email = User.GetRequiredEmail();
+        var profile = await _db.UserProfiles.FirstOrDefaultAsync(user => user.Id == userId);
+        if (profile is null)
         {
-            await _db.SaveChangesAsync();
+            profile = new UserProfile { Id = userId, Email = email, FullName = request.FullName,
+                UserType = request.UserType, CreatedAt = DateTime.UtcNow };
+            _db.UserProfiles.Add(profile);
         }
-        catch (DbUpdateConcurrencyException)
+        else
         {
-            if (!await _db.UserProfiles.AnyAsync(u => u.Id == id))
-                return NotFound();
-            throw;
+            profile.Email = email;
+            profile.FullName = request.FullName;
+            profile.UserType = request.UserType;
         }
-
-        return NoContent();
+        await _db.SaveChangesAsync();
+        return Ok(profile.ToResponse());
     }
 
-    // DELETE: api/v1/userprofiles/{id}
-    [HttpDelete("{id}")]
-    public async Task<IActionResult> Delete(Guid id)
+    [HttpDelete("me")]
+    public async Task<IActionResult> DeleteMe()
     {
-        var user = await _db.UserProfiles.FindAsync(id);
-        if (user == null)
-            return NotFound();
-
-        _db.UserProfiles.Remove(user);
+        var userId = User.GetRequiredUserId();
+        var profile = await _db.UserProfiles.FindAsync(userId);
+        if (profile is null) return NotFound();
+        _db.UserProfiles.Remove(profile);
         await _db.SaveChangesAsync();
-
         return NoContent();
     }
 }

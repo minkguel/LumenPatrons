@@ -48,9 +48,13 @@ export function AuthForm() {
       return;
     }
 
-    await signIn(signInForm.email, signInForm.password);
-    setSuccess(true);
-    router.push("/");
+    try {
+      await signIn(signInForm.email, signInForm.password);
+      setSuccess(true);
+      router.push("/");
+    } catch (authError) {
+      setError(authError instanceof Error ? authError.message : "Sign in failed.");
+    }
   }
 
   async function handleSignUp(event: FormEvent) {
@@ -75,9 +79,12 @@ export function AuthForm() {
       return;
     }
 
-    await signUp(signUpForm);
-    setSuccess(true);
-    router.push("/");
+    try {
+      await signUp(signUpForm);
+      setSuccess(true);
+    } catch (authError) {
+      setError(authError instanceof Error ? authError.message : "Account creation failed.");
+    }
   }
 
   return (
@@ -199,7 +206,7 @@ export function AuthForm() {
             )}
             {success && (
               <p className="text-sm text-green-600 bg-green-50 px-3 py-2 rounded-lg">
-                Account created successfully!
+                Account created. Check your email if confirmation is required.
               </p>
             )}
             <Button type="submit" className="w-full" disabled={isLoading}>

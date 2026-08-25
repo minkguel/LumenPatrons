@@ -41,12 +41,12 @@ Make it easy to discover, save and apply for non‑dilutive funding opportunitie
 - Components:
   - `client/components/layout/*` — Sidebar, Topbar, AppShell, StatusWidget, NavLink.
   - Other UI components for applications, settings, and UI primitives under `client/components/*`.
-- Auth scaffolding:
-  - `client/providers/AuthProvider.tsx` & `client/lib/auth.ts` — mocked sign-in / sign-up flows (client-only).
+- Authentication:
+  - `client/providers/AuthProvider.tsx` & `client/lib/auth.ts` — Supabase Auth sign-in, sign-up, sign-out, and session restoration.
 - API client helper:
   - `client/lib/api.ts` — `getSystemStatus()` calls backend `/api/v1/status`.
 - Notes:
-  - Most frontend data is mock; wiring to real API endpoints is pending.
+  - Discover uses the real API. Applications and settings still use mock data and need wiring to the protected endpoints.
 
 ### Backend (server)
 - Startup: `server/Program.cs`
@@ -68,23 +68,17 @@ Make it easy to discover, save and apply for non‑dilutive funding opportunitie
 ## Available backend endpoints (summary)
 - GET `/api/v1/status` — service + database connectivity
 - Funding opportunities
-  - GET `/api/v1/fundingopportunities`
-  - GET `/api/v1/fundingopportunities/{id}`
-  - POST `/api/v1/fundingopportunities`
-  - PUT `/api/v1/fundingopportunities/{id}`
-  - DELETE `/api/v1/fundingopportunities/{id}`
+  - GET `/api/v1/fundingopportunities` — public
+  - GET `/api/v1/fundingopportunities/{id}` — public
+  - POST/PUT/DELETE — requires an authenticated user with `app_metadata.role = admin`
 - Saved opportunities
-  - GET `/api/v1/savedopportunities/user/{userId}`
-  - GET `/api/v1/savedopportunities/{id}`
-  - POST `/api/v1/savedopportunities`
-  - PUT `/api/v1/savedopportunities/{id}`
-  - DELETE `/api/v1/savedopportunities/{id}`
+  - GET `/api/v1/savedopportunities` — current user's items
+  - GET/PUT/DELETE `/api/v1/savedopportunities/{id}` — owner only
+  - POST `/api/v1/savedopportunities` — ownership comes from the JWT, never the request body
 - User profiles
-  - GET `/api/v1/userprofiles`
-  - GET `/api/v1/userprofiles/{id}`
-  - POST `/api/v1/userprofiles`
-  - PUT `/api/v1/userprofiles/{id}`
-  - DELETE `/api/v1/userprofiles/{id}`
+  - GET/PUT/DELETE `/api/v1/userprofiles/me` — current user only
+
+All protected endpoints require `Authorization: Bearer <Supabase access token>`.
 
 ---
 
@@ -139,37 +133,38 @@ Option B — Run frontend and backend separately
 Example environment variables (recommended)
 - Frontend:
   - `NEXT_PUBLIC_API_URL` — e.g. `http://localhost:5083`
+  - `NEXT_PUBLIC_SUPABASE_URL` — Supabase project URL
+  - `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` — browser-safe publishable key; never use a secret/service-role key
 - Backend:
   - `ConnectionStrings__SupabaseConnection` env var or update `server/appsettings.Development.json`:
     - `ConnectionStrings__SupabaseConnection="Host=...;Port=5432;Database=...;Username=...;Password=...;"`
+  - `Supabase__Url` — same Supabase project URL, used for JWT issuer/JWKS validation
 
 Security note: do not commit production secrets to the repository. Use environment variables, a secrets store, or a local `.env` (gitignored).
 
 ---
 
 ## Current status
-- Frontend: UI shell, pages and components implemented; mock auth and mock funding data used; system status fetch wired.
+- Frontend: UI shell and pages implemented; real Supabase Auth and funding API are wired; applications/settings remain mock.
 - Backend: controllers, models, DbContext and a status endpoint implemented; migrations are present.
-- Integration: CORS allows `http://localhost:3000`; frontend is not yet wired to real CRUD endpoints (mostly mock data).
+- Security: JWT validation, owner-scoped user endpoints, admin-only funding mutations, DTO responses, uniqueness constraints, and Supabase RLS policies are implemented in code.
 
 ---
 
 ## Known issues & notes
 - Port mismatch: frontend client fallback API is `http://localhost:5083` while docker-compose maps server to host `5000`. Set `NEXT_PUBLIC_API_URL` to the actual backend URL.
 - `appsettings.Development.json` currently contains a connection string — treat that value as sensitive.
-- Authentication: currently mocked client-side. No backend auth or authorization implemented.
-- API endpoints are open (no auth/validation) — consider adding validation and auth before production.
+- Apply the latest EF migration before using authenticated profile/saved-opportunity flows.
+- Enable Supabase Auth leaked-password protection before production.
 - No E2E tests at present.
 
 ---
 
 ## Recommended next steps (prioritized)
-1. Implement authentication (backend JWT or integrate Supabase Auth) and wire `AuthProvider` to the backend.
-2. Wire frontend to real API endpoints (replace mock data in `client/app/(app)/page.tsx` and mocks in `client/lib/auth.ts`).
-3. Hide secrets: load DB connection string from environment variables and remove secrets from committed files.
-4. Create a small data ingestion pipeline (scraper) to populate `FundingOpportunity` records.
-5. Add tests and basic CI; automate EF migrations in dev/CI.
-6. Add authorization checks on backend endpoints and server-side validation.
+1. Apply the `SecurityFoundation` migration and enable leaked-password protection in Supabase Auth.
+2. Wire Applications and Settings to the protected API endpoints.
+3. Create a small data ingestion pipeline to populate `FundingOpportunity` records.
+4. Add tests and basic CI; automate EF migrations in dev/CI.
 
 ---
 

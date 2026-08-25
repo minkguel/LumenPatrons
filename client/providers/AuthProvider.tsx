@@ -4,6 +4,7 @@ import {
   createContext,
   useCallback,
   useContext,
+  useEffect,
   useMemo,
   useState,
 } from "react";
@@ -22,7 +23,34 @@ const AuthContext = createContext<AuthContextValue | null>(null);
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<AuthUser | null>(null);
-  const [isLoading, setIsLoading] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    let subscription: { unsubscribe: () => void } | undefined;
+    let active = true;
+
+    authApi.getCurrentUser()
+      .then((currentUser) => {
+        if (active) setUser(currentUser);
+      })
+      .catch((error) => console.error("Failed to restore auth session", error))
+      .finally(() => {
+        if (active) setIsLoading(false);
+      });
+
+    try {
+      subscription = authApi.onAuthStateChange((currentUser) => {
+        if (active) setUser(currentUser);
+      });
+    } catch (error) {
+      console.error("Failed to subscribe to auth changes", error);
+    }
+
+    return () => {
+      active = false;
+      subscription?.unsubscribe();
+    };
+  }, []);
 
   const signIn = useCallback(async (email: string, password: string) => {
     setIsLoading(true);
