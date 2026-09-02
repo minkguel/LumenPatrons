@@ -16,8 +16,6 @@ Make it easy to discover, save and apply for non‑dilutive funding opportunitie
 - Backend: C#, ASP.NET Core Web API, Entity Framework Core
 - Database: PostgreSQL (Supabase in development config)
 - Containerization: Docker (docker-compose)
-- Hosting suggestion: Vercel (frontend)
-- Scraper/ingestion (future): Playwright / Selenium / Crawlee / custom
 
 ---
 
