@@ -4,7 +4,13 @@ export type SystemStatus = {
   timestamp?: string;
 };
 
-const API_BASE = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:5083";
+declare const process: {
+  env: {
+    NEXT_PUBLIC_API_URL?: string;
+  };
+};
+
+const API_BASE = process.env.NEXT_PUBLIC_API_URL;
 
 export async function getSystemStatus(): Promise<SystemStatus> {
   try {
