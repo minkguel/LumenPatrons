@@ -10,7 +10,6 @@ public record FundingOpportunityResponse(
     decimal? MinimumAmount,
     DateTime? Deadline,
     string ExternalUrl,
-    bool IsPremiumOnly,
     DateTime CreatedAt);
 
 public record SavedOpportunityResponse(
@@ -33,7 +32,6 @@ public record UserProfileResponse(
     string Email,
     string FullName,
     string UserType,
-    string SubscriptionTier,
     DateTime CreatedAt);
 
 public sealed record UpdateUserProfileRequest(
@@ -44,10 +42,10 @@ public static class ContractMappings
 {
     public static FundingOpportunityResponse ToResponse(this Models.FundingOpportunity item) =>
         new(item.Id, item.Title, item.PatronName, item.Category, item.MinimumAmount,
-            item.Deadline, item.ExternalUrl, item.IsPremiumOnly, item.CreatedAt);
+            item.Deadline, item.ExternalUrl, item.CreatedAt);
 
     public static UserProfileResponse ToResponse(this Models.UserProfile item) =>
-        new(item.Id, item.Email, item.FullName, item.UserType, item.SubscriptionTier, item.CreatedAt);
+        new(item.Id, item.Email, item.FullName, item.UserType, item.CreatedAt);
 
     public static SavedOpportunityResponse ToResponse(this Models.SavedOpportunity item) =>
         new(item.Id, item.Status, item.AttachedDocumentUrl, item.SavedAt, item.Opportunity.ToResponse());

@@ -9,8 +9,6 @@ public class UserProfile
     [Required, MaxLength(100)] public string Email { get; set; } = string.Empty;
     [MaxLength(100)] public string FullName { get; set; } = string.Empty;
     public string UserType { get; set; } = string.Empty;
-    public string? StripeCustomerId { get; set; }
-    public string SubscriptionTier { get; set; } = "Free";
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
     public ICollection<SavedOpportunity> SavedOpportunities { get; set; } = new List<SavedOpportunity>();
 }
@@ -24,7 +22,6 @@ public class FundingOpportunity
     [Column(TypeName = "decimal(18,2)")] public decimal? MinimumAmount { get; set; }
     public DateTime? Deadline { get; set; }
     public string ExternalUrl { get; set; } = string.Empty;
-    public bool IsPremiumOnly { get; set; } = false;
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
     public ICollection<SavedOpportunity> SavedByUsers { get; set; } = new List<SavedOpportunity>();
 }

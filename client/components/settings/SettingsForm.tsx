@@ -1,7 +1,6 @@
 "use client";
 
 import { FormEvent, useState } from "react";
-import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
 import { Input } from "@/components/ui/Input";
@@ -44,10 +43,7 @@ export function SettingsForm() {
   return (
     <div className="space-y-8 max-w-2xl">
       <Card>
-        <div className="flex items-center justify-between mb-6">
-          <h3 className="text-lg font-bold text-foreground">Profile Settings</h3>
-          <Badge variant="gold">{profile.subscriptionTier} Plan</Badge>
-        </div>
+        <h3 className="text-lg font-bold text-foreground mb-6">Profile Settings</h3>
 
         <form onSubmit={handleProfileSubmit} className="space-y-4">
           <Input

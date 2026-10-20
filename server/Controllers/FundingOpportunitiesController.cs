@@ -22,16 +22,12 @@ public class FundingOpportunitiesController : ControllerBase
     [HttpGet]
     [AllowAnonymous]
     public async Task<ActionResult<IEnumerable<FundingOpportunityResponse>>> GetAll(
-        [FromQuery] string? category = null,
-        [FromQuery] bool? premiumOnly = null)
+        [FromQuery] string? category = null)
     {
         var query = _db.FundingOpportunities.AsQueryable();
 
         if (!string.IsNullOrEmpty(category))
             query = query.Where(f => f.Category != null && f.Category.Contains(category));
-
-        if (premiumOnly.HasValue)
-            query = query.Where(f => f.IsPremiumOnly == premiumOnly.Value);
 
         var opportunities = await query.AsNoTracking()
             .OrderByDescending(f => f.CreatedAt).ToListAsync();

@@ -35,7 +35,6 @@ export type FundingOpportunity = {
   minimumAmount?: number | null;
   deadline?: string; // ISO string from backend
   externalUrl?: string;
-  isPremiumOnly?: boolean;
   createdAt?: string;
 };
 

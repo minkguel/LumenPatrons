@@ -8,7 +8,6 @@ export type UserProfile = {
   fullName: string;
   email: string;
   userType: string;
-  subscriptionTier: string;
   preferences: UserPreferences;
 };
 
@@ -16,7 +15,6 @@ export const mockUserProfile: UserProfile = {
   fullName: "Jane Founder",
   email: "jane@example.com",
   userType: "Founder",
-  subscriptionTier: "Free",
   preferences: {
     deadlineReminders: true,
     newPatronAlerts: false,
