@@ -43,9 +43,6 @@ namespace LumenPatrons.Api.Migrations
                         .IsRequired()
                         .HasColumnType("text");
 
-                    b.Property<bool>("IsPremiumOnly")
-                        .HasColumnType("boolean");
-
                     b.Property<decimal?>("MinimumAmount")
                         .HasColumnType("decimal(18,2)");
 
@@ -115,13 +112,6 @@ namespace LumenPatrons.Api.Migrations
                         .IsRequired()
                         .HasMaxLength(100)
                         .HasColumnType("character varying(100)");
-
-                    b.Property<string>("StripeCustomerId")
-                        .HasColumnType("text");
-
-                    b.Property<string>("SubscriptionTier")
-                        .IsRequired()
-                        .HasColumnType("text");
 
                     b.Property<string>("UserType")
                         .IsRequired()

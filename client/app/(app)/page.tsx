@@ -78,7 +78,7 @@ export default function Home() {
                 <div className="flex justify-between items-start mb-4">
                   <Badge>{patron.category?.length ? patron.category.join(", ") : "General"}</Badge>
                   <span className="text-foreground/40 text-sm group-hover:text-patron-gold transition-colors">
-                    {patron.isPremiumOnly ? "Premium" : "Grant"}
+                    Grant
                   </span>
                 </div>
                 <h3 className="text-lg font-bold text-foreground mb-1">
