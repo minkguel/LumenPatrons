@@ -154,6 +154,7 @@ Configure the hosted Supabase project (Dashboard) once:
 6. Authentication > Email Templates > **Reset password**: use the link
    `{{ .SiteURL }}/auth/confirm?token_hash={{ .TokenHash }}&type=recovery&next=/auth/reset-password`
    (see `supabase/templates/recovery.html`).
+7. Authentication > JWT Keys: the hosted project must use **asymmetric JWT signing keys** (JWKS, e.g. ES256), not the legacy shared secret. The API validates tokens against `/auth/v1/.well-known/openid-configuration`, so verify the project publishes a key at `/auth/v1/.well-known/jwks.json` before deploying.
 
 `supabase/config.toml` mirrors these settings for the local Supabase CLI test stack.
 
@@ -171,6 +172,23 @@ The suite currently verifies anonymous rejection, owner isolation for saved oppo
 
 ---
 
+## Running E2E tests locally
+
+Playwright tests run against the local Supabase CLI stack (Docker required), never hosted Supabase. From the repository root:
+
+```bash
+echo '[]' > supabase/signing_keys.json && npx supabase gen signing-key --algorithm ES256 --append
+npx supabase start
+eval "$(npx supabase status -o env)"
+export NEXT_PUBLIC_SUPABASE_URL="$API_URL"
+export NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY="${PUBLISHABLE_KEY:-$ANON_KEY}"
+export ConnectionStrings__SupabaseConnection="Host=127.0.0.1;Port=54322;Database=postgres;Username=postgres;Password=postgres"
+(cd server && dotnet ef database update)
+cd client && npm run e2e
+```
+
+See the `e2e` job in `.github/workflows/security-tests.yml` for the exact CI steps.
+
 ## Current status
 - Frontend: UI shell and pages implemented; real Supabase Auth and funding API are wired; applications/settings remain mock.
 - Backend: controllers, models, DbContext and a status endpoint implemented; migrations are present.
@@ -183,7 +201,7 @@ The suite currently verifies anonymous rejection, owner isolation for saved oppo
 - `appsettings.Development.json` currently contains a connection string — treat that value as sensitive.
 - Apply the latest EF migration before using authenticated profile/saved-opportunity flows.
 - Enable Supabase Auth leaked-password protection before production.
-- No E2E tests at present.
+- Browser (Playwright) tests run against a local Supabase stack, never hosted Supabase; see "Running E2E tests locally".
 
 ---
 
