@@ -1,5 +1,5 @@
 import type { User } from "@supabase/supabase-js";
-import { getSupabaseClient } from "@/lib/supabase";
+import { getSupabaseBrowserClient } from "@/lib/supabase/browser";
 
 export type AuthUser = {
   id: string;
@@ -25,26 +25,26 @@ function toAuthUser(user: User): AuthUser {
 }
 
 export async function getCurrentUser(): Promise<AuthUser | null> {
-  const { data, error } = await getSupabaseClient().auth.getUser();
+  const { data, error } = await getSupabaseBrowserClient().auth.getUser();
   if (error) return null;
   return data.user ? toAuthUser(data.user) : null;
 }
 
 export function onAuthStateChange(callback: (user: AuthUser | null) => void) {
-  return getSupabaseClient().auth.onAuthStateChange((_event, session) => {
+  return getSupabaseBrowserClient().auth.onAuthStateChange((_event, session) => {
     callback(session?.user ? toAuthUser(session.user) : null);
   }).data.subscription;
 }
 
 export async function signIn(email: string, password: string): Promise<AuthUser> {
-  const { data, error } = await getSupabaseClient().auth.signInWithPassword({ email, password });
+  const { data, error } = await getSupabaseBrowserClient().auth.signInWithPassword({ email, password });
   if (error) throw error;
   if (!data.user) throw new Error("Sign in did not return a user.");
   return toAuthUser(data.user);
 }
 
 export async function signUp(data: SignUpInput): Promise<AuthUser | null> {
-  const { data: result, error } = await getSupabaseClient().auth.signUp({
+  const { data: result, error } = await getSupabaseBrowserClient().auth.signUp({
     email: data.email,
     password: data.password,
     options: { data: { full_name: data.fullName, user_type: data.userType } },
@@ -56,11 +56,11 @@ export async function signUp(data: SignUpInput): Promise<AuthUser | null> {
 }
 
 export async function signOut(): Promise<void> {
-  const { error } = await getSupabaseClient().auth.signOut();
+  const { error } = await getSupabaseBrowserClient().auth.signOut();
   if (error) throw error;
 }
 
 export async function getAccessToken(): Promise<string | null> {
-  const { data } = await getSupabaseClient().auth.getSession();
+  const { data } = await getSupabaseBrowserClient().auth.getSession();
   return data.session?.access_token ?? null;
 }
