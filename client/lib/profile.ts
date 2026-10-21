@@ -33,13 +33,17 @@ async function provision(user: ProfileSeed): Promise<void> {
       confirmed.add(user.id);
       return;
     }
-    if (existing.status !== 404) return;
+    if (existing.status !== 404) {
+      console.error("Profile lookup failed", existing.status);
+      return;
+    }
 
     const created = await authorizedFetch(PROFILE_PATH, {
       method: "PUT",
       body: JSON.stringify(profileRequestBody(user)),
     });
     if (created.ok) confirmed.add(user.id);
+    else console.error("Profile creation failed", created.status);
   } catch (error) {
     console.error("Failed to provision user profile", error);
   }

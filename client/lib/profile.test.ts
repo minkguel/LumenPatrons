@@ -36,9 +36,37 @@ describe("ensureProfile", () => {
     });
   });
 
+  it("logs a non-404 GET failure, resolves, and retries later", async () => {
+    const spy = vi.spyOn(console, "error").mockImplementation(() => {});
+    fetchMock.mockResolvedValueOnce(res(500)).mockResolvedValueOnce(res(200));
+    const u = user();
+    await expect(ensureProfile(u)).resolves.toBeUndefined();
+    expect(spy).toHaveBeenCalledWith("Profile lookup failed", 500);
+    await ensureProfile(u);
+    expect(fetchMock).toHaveBeenCalledTimes(2);
+    spy.mockRestore();
+  });
+
+  it("logs a failed PUT, resolves, and does not mark confirmed", async () => {
+    const spy = vi.spyOn(console, "error").mockImplementation(() => {});
+    fetchMock
+      .mockResolvedValueOnce(res(404))
+      .mockResolvedValueOnce(res(400))
+      .mockResolvedValueOnce(res(200));
+    const u = user();
+    await expect(ensureProfile(u)).resolves.toBeUndefined();
+    expect(spy).toHaveBeenCalledWith("Profile creation failed", 400);
+    await ensureProfile(u);
+    expect(fetchMock).toHaveBeenCalledTimes(3);
+    expect(fetchMock.mock.calls[2][1]).toBeUndefined();
+    spy.mockRestore();
+  });
+
   it("never rejects", async () => {
+    const spy = vi.spyOn(console, "error").mockImplementation(() => {});
     fetchMock.mockRejectedValueOnce(new Error("boom"));
     await expect(ensureProfile(user())).resolves.toBeUndefined();
+    spy.mockRestore();
   });
 
   it("dedupes concurrent calls for the same user", async () => {
@@ -59,11 +87,13 @@ describe("ensureProfile", () => {
   });
 
   it("retries after a failed attempt", async () => {
+    const spy = vi.spyOn(console, "error").mockImplementation(() => {});
     fetchMock.mockRejectedValueOnce(new Error("boom")).mockResolvedValueOnce(res(200));
     const u = user();
     await ensureProfile(u);
     await ensureProfile(u);
     expect(fetchMock).toHaveBeenCalledTimes(2);
+    spy.mockRestore();
   });
 });
 
