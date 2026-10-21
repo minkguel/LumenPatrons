@@ -14,6 +14,15 @@ enabled = true
 site_url = "http://localhost:3000"
 additional_redirect_urls = ["http://localhost:3000/**"]
 minimum_password_length = 8
+# Asymmetric (ES256) JWT signing key, so /auth/v1/.well-known/jwks.json publishes a key the API can validate.
+# Local test-harness key only: it is NOT committed (see .gitignore). Generate it once per machine/CI run:
+#   echo [] > supabase/signing_keys.json && npx supabase gen signing-key --algorithm ES256 --append
+# The path is relative to this supabase/ directory.
+signing_keys_path = "./signing_keys.json"
+
+[auth.rate_limit]
+# The e2e suite sends about ten emails per run; the CLI default (2 per hour) would throttle it.
+email_sent = 100
 
 [auth.email]
 enable_signup = true

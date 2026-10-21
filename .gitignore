@@ -41,3 +41,8 @@ scraper/.scrapy/
 
 # Superpowers SDD scratch
 .superpowers/
+
+# Supabase local stack: JWT signing key, generated per machine/CI run (see supabase/config.toml)
+supabase/signing_keys.json
+supabase/.temp/
+supabase/.branches/
