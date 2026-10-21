@@ -3,7 +3,8 @@
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/Button";
 import { resendConfirmation } from "@/lib/auth";
-import { toAuthMessage } from "@/lib/auth/messages";
+import { isRateLimited, toAuthMessage } from "@/lib/auth/messages";
+import { validateEmail } from "@/lib/auth/validation";
 
 const COOLDOWN_SECONDS = 60;
 
@@ -19,16 +20,22 @@ export function ResendButton({ email }: { email: string }) {
   }, [secondsLeft]);
 
   async function handleClick() {
+    const invalid = validateEmail(email);
+    if (invalid) {
+      setMessage({ text: invalid, isError: true });
+      return;
+    }
     setSending(true);
     setMessage(null);
     try {
       await resendConfirmation(email);
       setMessage({ text: "Confirmation email sent.", isError: false });
+      setSecondsLeft(COOLDOWN_SECONDS);
     } catch (error) {
       setMessage({ text: toAuthMessage(error), isError: true });
+      if (isRateLimited(error)) setSecondsLeft(COOLDOWN_SECONDS);
     } finally {
       setSending(false);
-      setSecondsLeft(COOLDOWN_SECONDS);
     }
   }
 

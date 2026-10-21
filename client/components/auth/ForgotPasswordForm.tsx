@@ -1,16 +1,14 @@
 "use client";
 
-import { isAuthApiError } from "@supabase/supabase-js";
 import Link from "next/link";
 import { FormEvent, useState } from "react";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import { requestPasswordReset } from "@/lib/auth";
-import { toAuthMessage } from "@/lib/auth/messages";
+import { isRateLimited, toAuthMessage } from "@/lib/auth/messages";
 import { validateEmail } from "@/lib/auth/validation";
 
 const SENT = "If an account exists for that email, we've sent a reset link.";
-const RATE_LIMIT_CODES = ["over_email_send_rate_limit", "over_request_rate_limit"];
 
 export function ForgotPasswordForm() {
   const [email, setEmail] = useState("");
@@ -35,7 +33,7 @@ export function ForgotPasswordForm() {
       await requestPasswordReset(email);
       setSent(true);
     } catch (authError) {
-      if (isAuthApiError(authError) && authError.code && RATE_LIMIT_CODES.includes(authError.code)) {
+      if (isRateLimited(authError)) {
         setError(toAuthMessage(authError));
       } else {
         // Do not reveal whether an account exists.
