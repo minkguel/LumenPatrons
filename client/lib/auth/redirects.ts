@@ -11,11 +11,20 @@ function isAuthPath(pathname: string): boolean {
   return pathname === "/auth" || pathname.startsWith("/auth/");
 }
 
+const BASE = "http://x";
+const CONTROL_CHARS = /[\x00-\x1f\x7f]/;
+
 /** Returns `next` only if it is a same-origin, non-auth path; otherwise "/". */
 export function safeRedirect(next: string | null | undefined): string {
-  if (!next || !/^\/(?![\/\\])/.test(next)) return "/";
-  const pathname = next.split(/[?#]/)[0];
-  return isAuthPath(pathname) ? "/" : next;
+  if (!next || !/^\/(?![\/\\])/.test(next) || CONTROL_CHARS.test(next)) return "/";
+  let url: URL;
+  try {
+    url = new URL(next, BASE);
+  } catch {
+    return "/";
+  }
+  if (url.origin !== BASE) return "/";
+  return isAuthPath(url.pathname) ? "/" : url.pathname + url.search + url.hash;
 }
 
 export function decideRedirect(

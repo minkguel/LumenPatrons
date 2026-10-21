@@ -5,6 +5,13 @@ describe("safeRedirect", () => {
   it.each(["/applications", "/a?b=1", "/settings#x"])("keeps %s", (p) => expect(safeRedirect(p)).toBe(p));
   it.each(["//evil.com", "/\\evil.com", "https://evil.com", "javascript:alert(1)", "", null, undefined, "applications"])(
     "rejects %s", (p) => expect(safeRedirect(p as string)).toBe("/"));
+  it.each(["/\t/evil.com", "/\n/evil.com", "/\t\\evil.com", "/\r//evil.com", "/a\tb"])(
+    "rejects control characters in %j", (p) => expect(safeRedirect(p)).toBe("/"));
+  it("keeps a percent-encoded tab as a same-origin path", () => {
+    const out = safeRedirect("/%09/evil.com");
+    expect(out).toMatch(/^\/(?![\/\\])/);
+    expect(new URL(out, "http://x").origin).toBe("http://x");
+  });
   it.each(["/auth", "/auth?tab=signup", "/auth/check-email"])("maps auth path %s to /", (p) => expect(safeRedirect(p)).toBe("/"));
   it("keeps paths that merely start with the letters auth", () => expect(safeRedirect("/authors")).toBe("/authors"));
 });
