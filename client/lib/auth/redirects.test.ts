@@ -52,3 +52,21 @@ describe("hasSessionCookie", () => {
     expect(hasSessionCookie(["sb-127-auth-token-code-verifier"])).toBe(false));
   it("is false without any auth cookie", () => expect(hasSessionCookie(["theme"])).toBe(false));
 });
+
+describe("safeRedirect dot-segment protocol-relative inputs", () => {
+  const hostile = [
+    "/.//evil.com",
+    "/..//evil.com",
+    "/%2e%2e//evil.com",
+    "/.%2e//evil.com",
+    "/x/..//evil.com",
+    "/./\\evil.com",
+    "/x/../\\evil.com",
+  ];
+  it.each(hostile)("rejects %s", (p) => expect(safeRedirect(p)).toBe("/"));
+  it("never leaves the site origin for hostile inputs", () => {
+    for (const x of [...hostile, "/\t/evil.com", "//evil.com", "/\evil.com"]) {
+      expect(new URL(safeRedirect(x), "http://site.test/").host).toBe("site.test");
+    }
+  });
+});

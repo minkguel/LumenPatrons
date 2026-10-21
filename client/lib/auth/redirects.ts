@@ -31,7 +31,17 @@ export function safeRedirect(next: string | null | undefined): string {
     return "/";
   }
   if (url.origin !== BASE) return "/";
-  return isAuthPath(url.pathname) ? "/" : url.pathname + url.search + url.hash;
+  if (isAuthPath(url.pathname)) return "/";
+  const out = url.pathname + url.search + url.hash;
+  // Dot-segment resolution can yield "//host"; re-check and require idempotence.
+  if (!/^\/(?![\/\\])/.test(out)) return "/";
+  try {
+    const again = new URL(out, BASE);
+    if (again.origin !== BASE || again.pathname + again.search + again.hash !== out) return "/";
+  } catch {
+    return "/";
+  }
+  return out;
 }
 
 export function decideRedirect(
