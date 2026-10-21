@@ -1,0 +1,28 @@
+# Supabase CLI config. Used for the local test harness; hosted settings live in the dashboard (see README).
+project_id = "lumenpatrons"
+
+[api]
+enabled = true
+port = 54321
+
+[db]
+port = 54322
+major_version = 15
+
+[auth]
+enabled = true
+site_url = "http://localhost:3000"
+additional_redirect_urls = ["http://localhost:3000/**"]
+minimum_password_length = 8
+
+[auth.email]
+enable_signup = true
+enable_confirmations = true
+
+[auth.email.template.confirmation]
+subject = "Confirm your LumenPatrons email"
+content_path = "./supabase/templates/confirmation.html"
+
+[auth.email.template.recovery]
+subject = "Reset your LumenPatrons password"
+content_path = "./supabase/templates/recovery.html"

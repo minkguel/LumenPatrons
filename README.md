@@ -140,6 +140,23 @@ Example environment variables (recommended)
 
 Security note: do not commit production secrets to the repository. Use environment variables, a secrets store, or a local `.env` (gitignored).
 
+## Supabase Auth setup
+
+Configure the hosted Supabase project (Dashboard) once:
+
+1. Authentication > Providers > Email: turn **Confirm email** on.
+2. Authentication > Providers > Email: set **Minimum password length** to `8`.
+3. Authentication > URL Configuration: set **Site URL** to the deployed client origin (`http://localhost:3000` locally).
+4. Authentication > URL Configuration: add `<site origin>/**` to **Redirect URLs** (`http://localhost:3000/**` locally).
+5. Authentication > Email Templates > **Confirm signup**: use the link
+   `{{ .SiteURL }}/auth/confirm?token_hash={{ .TokenHash }}&type=signup&next=/`
+   (see `supabase/templates/confirmation.html`).
+6. Authentication > Email Templates > **Reset password**: use the link
+   `{{ .SiteURL }}/auth/confirm?token_hash={{ .TokenHash }}&type=recovery&next=/auth/reset-password`
+   (see `supabase/templates/recovery.html`).
+
+`supabase/config.toml` mirrors these settings for the local Supabase CLI test stack.
+
 ## Security tests
 
 The API security integration tests use an isolated in-memory database and a test-only authentication handler. They never connect to Supabase and require no secrets, which makes them suitable for GitHub Actions.
