@@ -38,3 +38,6 @@ client/out/
 scraper/venv/
 scraper/__pycache__/
 scraper/.scrapy/
+
+# Superpowers SDD scratch
+.superpowers/
