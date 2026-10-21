@@ -1,12 +1,17 @@
 import { describe, expect, it } from "vitest";
 import {
   normalizeEmail,
+  validateEmail,
   validateEmailPassword,
   validateNewPassword,
   validateSignUp,
 } from "./validation";
 
 describe("validation", () => {
+  it("validateEmail accepts padded mixed-case", () => expect(validateEmail(" Jane@Example.com ")).toBeNull());
+  it("validateEmail rejects invalid", () =>
+    expect(validateEmail("a@b")).toBe("Please enter a valid email address."));
+  it("validateEmail rejects empty", () => expect(validateEmail("  ")).toBe("Please fill in all fields."));
   it("normalizes email", () => expect(normalizeEmail("  Jane@Example.COM ")).toBe("jane@example.com"));
   it("accepts normalized-valid email", () =>
     expect(validateEmailPassword(" Jane@Example.com ", "12345678")).toBeNull());
