@@ -7,6 +7,8 @@ export type ProfileSeed = {
 };
 
 const PROFILE_PATH = "/api/v1/userprofiles/me";
+// A 401 here must never trigger the global sign-out/redirect: it is just another failure to log.
+const NO_AUTH_RECOVERY = { skipAuthRecovery: true };
 const MAX_FULL_NAME = 100;
 const MAX_USER_TYPE = 50;
 
@@ -28,7 +30,7 @@ export function profileRequestBody(user: ProfileSeed): { fullName: string; userT
 
 async function provision(user: ProfileSeed): Promise<void> {
   try {
-    const existing = await authorizedFetch(PROFILE_PATH);
+    const existing = await authorizedFetch(PROFILE_PATH, {}, NO_AUTH_RECOVERY);
     if (existing.ok) {
       confirmed.add(user.id);
       return;
@@ -38,10 +40,11 @@ async function provision(user: ProfileSeed): Promise<void> {
       return;
     }
 
-    const created = await authorizedFetch(PROFILE_PATH, {
-      method: "PUT",
-      body: JSON.stringify(profileRequestBody(user)),
-    });
+    const created = await authorizedFetch(
+      PROFILE_PATH,
+      { method: "PUT", body: JSON.stringify(profileRequestBody(user)) },
+      NO_AUTH_RECOVERY,
+    );
     if (created.ok) confirmed.add(user.id);
     else console.error("Profile creation failed", created.status);
   } catch (error) {

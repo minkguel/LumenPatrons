@@ -30,10 +30,25 @@ describe("ensureProfile", () => {
     fetchMock.mockResolvedValueOnce(res(404)).mockResolvedValueOnce(res(200));
     await ensureProfile(user({ full_name: "Jane", user_type: "Researcher" }));
     expect(fetchMock).toHaveBeenCalledTimes(2);
-    expect(fetchMock).toHaveBeenNthCalledWith(2, "/api/v1/userprofiles/me", {
-      method: "PUT",
-      body: JSON.stringify({ fullName: "Jane", userType: "Researcher" }),
-    });
+    expect(fetchMock).toHaveBeenNthCalledWith(1, "/api/v1/userprofiles/me", {}, { skipAuthRecovery: true });
+    expect(fetchMock).toHaveBeenNthCalledWith(
+      2,
+      "/api/v1/userprofiles/me",
+      {
+        method: "PUT",
+        body: JSON.stringify({ fullName: "Jane", userType: "Researcher" }),
+      },
+      { skipAuthRecovery: true },
+    );
+  });
+
+  it("logs a 401 GET, resolves, and does not throw", async () => {
+    const spy = vi.spyOn(console, "error").mockImplementation(() => {});
+    fetchMock.mockResolvedValueOnce(res(401));
+    await expect(ensureProfile(user())).resolves.toBeUndefined();
+    expect(spy).toHaveBeenCalledWith("Profile lookup failed", 401);
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+    spy.mockRestore();
   });
 
   it("logs a non-404 GET failure, resolves, and retries later", async () => {
@@ -58,7 +73,7 @@ describe("ensureProfile", () => {
     expect(spy).toHaveBeenCalledWith("Profile creation failed", 400);
     await ensureProfile(u);
     expect(fetchMock).toHaveBeenCalledTimes(3);
-    expect(fetchMock.mock.calls[2][1]).toBeUndefined();
+    expect(fetchMock.mock.calls[2][1]).toEqual({});
     spy.mockRestore();
   });
 
