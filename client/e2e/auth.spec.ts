@@ -1,7 +1,7 @@
 import { randomUUID } from "node:crypto";
 import { createServerClient } from "@supabase/ssr";
 import { expect, test, type Page } from "@playwright/test";
-import { API_URL, SUPABASE_PUBLISHABLE_KEY, SUPABASE_URL } from "./env";
+import { API_URL, EXPECT_TIMEOUT_MS, SUPABASE_PUBLISHABLE_KEY, SUPABASE_URL } from "./env";
 import { latestLinkFor } from "./mailpit";
 
 const FULL_NAME = "E2E Tester";
@@ -12,17 +12,28 @@ function uniqueEmail(): string {
   return `e2e+${randomUUID()}@example.com`;
 }
 
-/** Pathname + search of the current page, so assertions ignore the origin. */
+/**
+ * Waits for pathname + search of the current page, so assertions ignore the origin.
+ * Uses the raised expect timeout: the first visit to a route can include compile time.
+ */
 async function expectLocation(page: Page, expected: string | RegExp) {
   const location = () => {
     const url = new URL(page.url());
     return url.pathname + url.search;
   };
+  const poll = expect.poll(location, { timeout: EXPECT_TIMEOUT_MS });
   if (typeof expected === "string") {
-    await expect.poll(location).toBe(expected);
+    await poll.toBe(expected);
   } else {
-    await expect.poll(location).toMatch(expected);
+    await poll.toMatch(expected);
   }
+}
+
+/** Waits for the pathname only (query string ignored). */
+async function expectPath(page: Page, pathname: string) {
+  await expect
+    .poll(() => new URL(page.url()).pathname, { timeout: EXPECT_TIMEOUT_MS })
+    .toBe(pathname);
 }
 
 async function signUp(page: Page, email: string) {
@@ -114,10 +125,10 @@ test("sign out then / redirects to /auth", async ({ page }) => {
 
   await page.getByRole("button", { name: FULL_NAME }).click();
   await page.getByRole("button", { name: "Sign Out" }).click();
-  await expect.poll(() => new URL(page.url()).pathname).toBe("/auth");
+  await expectPath(page, "/auth");
 
   await page.goto("/");
-  await expect.poll(() => new URL(page.url()).pathname).toBe("/auth");
+  await expectPath(page, "/auth");
 });
 
 test("forgot + reset password; old password rejected", async ({ page }) => {
@@ -153,7 +164,7 @@ test("reused confirm link lands on /auth/error", async ({ page }) => {
   await page.context().clearCookies();
 
   await page.goto(confirmLink);
-  await expect.poll(() => new URL(page.url()).pathname).toBe("/auth/error");
+  await expectPath(page, "/auth/error");
   await expect(page.getByText("This confirmation link is invalid or has expired.")).toBeVisible();
 });
 

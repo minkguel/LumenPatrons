@@ -3,6 +3,7 @@ import {
   API_URL,
   APP_URL,
   DB_CONNECTION,
+  EXPECT_TIMEOUT_MS,
   SUPABASE_PUBLISHABLE_KEY,
   SUPABASE_URL,
 } from "./e2e/env";
@@ -25,6 +26,7 @@ export default defineConfig({
   forbidOnly: isCI,
   retries: 0,
   timeout: 60_000,
+  expect: { timeout: EXPECT_TIMEOUT_MS },
   reporter: isCI ? [["list"], ["html", { open: "never" }]] : "list",
   use: {
     baseURL: APP_URL,
@@ -33,10 +35,12 @@ export default defineConfig({
   projects: [{ name: "chromium", use: { ...devices["Desktop Chrome"] } }],
   webServer: [
     {
-      command: "npm run dev",
+      // CI serves a production build so no route compiles on first visit; locally the dev server is
+      // quicker to start. NEXT_PUBLIC_* are inlined at build time, so the env below must reach the build.
+      command: isCI ? "npm run build && npm run start" : "npm run dev",
       url: APP_URL,
       reuseExistingServer: !isCI,
-      timeout: 120_000,
+      timeout: isCI ? 300_000 : 120_000,
       env: {
         NEXT_PUBLIC_SUPABASE_URL: SUPABASE_URL,
         NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: SUPABASE_PUBLISHABLE_KEY,

@@ -4,6 +4,9 @@
 
 export const APP_URL = "http://localhost:3000";
 
+/** Assertion timeout. Generous because a route's first visit can include compile/cold-start time. */
+export const EXPECT_TIMEOUT_MS = 15_000;
+
 export const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:5083";
 
 export const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL ?? "http://127.0.0.1:54321";
