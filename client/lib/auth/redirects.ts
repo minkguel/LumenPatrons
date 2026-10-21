@@ -11,6 +11,13 @@ function isAuthPath(pathname: string): boolean {
   return pathname === "/auth" || pathname.startsWith("/auth/");
 }
 
+/** True if a Supabase session cookie is present (PKCE code-verifier cookies are not a session). */
+export function hasSessionCookie(cookieNames: string[]): boolean {
+  return cookieNames.some(
+    (name) => name.startsWith("sb-") && name.includes("-auth-token") && !name.endsWith("-code-verifier"),
+  );
+}
+
 const BASE = "http://x";
 const CONTROL_CHARS = /[\x00-\x1f\x7f]/;
 

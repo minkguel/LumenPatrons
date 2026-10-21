@@ -1,6 +1,6 @@
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
-import { decideRedirect } from "@/lib/auth/redirects";
+import { decideRedirect, hasSessionCookie } from "@/lib/auth/redirects";
 
 export async function proxy(request: NextRequest) {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
@@ -10,6 +10,9 @@ export async function proxy(request: NextRequest) {
       "Supabase auth is not configured. Set NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY.",
     );
   }
+
+  // Read before getUser(): a failed refresh may clear the session cookies on the request.
+  const hadSessionCookie = hasSessionCookie(request.cookies.getAll().map(({ name }) => name));
 
   let response = NextResponse.next({ request });
 
@@ -29,10 +32,6 @@ export async function proxy(request: NextRequest) {
   const {
     data: { user },
   } = await supabase.auth.getUser();
-
-  const hadSessionCookie = request.cookies
-    .getAll()
-    .some(({ name }) => name.startsWith("sb-") && name.includes("-auth-token"));
 
   const { pathname, search } = request.nextUrl;
   const decision = decideRedirect(pathname, search, !!user, hadSessionCookie);

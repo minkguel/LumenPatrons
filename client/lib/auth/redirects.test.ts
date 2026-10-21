@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { PUBLIC_AUTH_PATHS, decideRedirect, safeRedirect } from "@/lib/auth/redirects";
+import { PUBLIC_AUTH_PATHS, decideRedirect, hasSessionCookie, safeRedirect } from "@/lib/auth/redirects";
 
 describe("safeRedirect", () => {
   it.each(["/applications", "/a?b=1", "/settings#x"])("keeps %s", (p) => expect(safeRedirect(p)).toBe(p));
@@ -41,4 +41,14 @@ describe("decideRedirect", () => {
     expect(decideRedirect("/auth", "?tab=signup", false, false)).toBeNull();
     expect(decideRedirect("/auth", "?tab=signup&next=%2Fa", true, true)).toEqual({ redirectTo: "/a" });
   });
+});
+
+describe("hasSessionCookie", () => {
+  it("detects the Supabase auth token cookie and its chunks", () => {
+    expect(hasSessionCookie(["sb-127-auth-token"])).toBe(true);
+    expect(hasSessionCookie(["other", "sb-127-auth-token.0"])).toBe(true);
+  });
+  it("ignores PKCE code-verifier cookies", () =>
+    expect(hasSessionCookie(["sb-127-auth-token-code-verifier"])).toBe(false));
+  it("is false without any auth cookie", () => expect(hasSessionCookie(["theme"])).toBe(false));
 });
