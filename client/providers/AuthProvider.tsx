@@ -65,8 +65,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const signUp = useCallback(async (data: SignUpInput) => {
     setIsLoading(true);
     try {
-      const authUser = await authApi.signUp(data);
-      setUser(authUser);
+      await authApi.signUp(data);
     } finally {
       setIsLoading(false);
     }
