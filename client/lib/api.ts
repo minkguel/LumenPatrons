@@ -60,6 +60,18 @@ export async function authorizedFetch(path: string, init: RequestInit = {}) {
     headers.set("Content-Type", "application/json");
   }
 
-  return fetch(`${API_BASE}${path}`, { ...init, headers, cache: "no-store" });
+  const response = await fetch(`${API_BASE}${path}`, { ...init, headers, cache: "no-store" });
+
+  if (response.status === 401 && typeof window !== "undefined") {
+    try {
+      await signOut("local");
+    } catch (error) {
+      console.error("Failed to clear expired session", error);
+    }
+    const next = encodeURIComponent(window.location.pathname + window.location.search);
+    window.location.assign(`/auth?next=${next}&reason=expired`);
+  }
+
+  return response;
 }
-import { getAccessToken } from "@/lib/auth";
+import { getAccessToken, signOut } from "@/lib/auth";

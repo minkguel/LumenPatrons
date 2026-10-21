@@ -1,4 +1,4 @@
-import type { User } from "@supabase/supabase-js";
+import type { AuthChangeEvent, User } from "@supabase/supabase-js";
 import { getSupabaseBrowserClient } from "@/lib/supabase/browser";
 import { normalizeEmail } from "@/lib/auth/validation";
 
@@ -31,9 +31,12 @@ export async function getCurrentUser(): Promise<AuthUser | null> {
   return data.user ? toAuthUser(data.user) : null;
 }
 
-export function onAuthStateChange(callback: (user: AuthUser | null) => void) {
-  return getSupabaseBrowserClient().auth.onAuthStateChange((_event, session) => {
-    callback(session?.user ? toAuthUser(session.user) : null);
+export function onAuthStateChange(
+  callback: (event: AuthChangeEvent, user: AuthUser | null, rawUser: User | null) => void,
+) {
+  return getSupabaseBrowserClient().auth.onAuthStateChange((event, session) => {
+    const rawUser = session?.user ?? null;
+    callback(event, rawUser ? toAuthUser(rawUser) : null, rawUser);
   }).data.subscription;
 }
 

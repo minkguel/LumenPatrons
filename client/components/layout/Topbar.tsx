@@ -1,7 +1,6 @@
 "use client";
 
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { Button } from "@/components/ui/Button";
 import { useAuth } from "@/providers/AuthProvider";
@@ -17,7 +16,6 @@ function getInitials(name: string) {
 
 export function Topbar() {
   const { user, signOut } = useAuth();
-  const router = useRouter();
   const [menuOpen, setMenuOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
 
@@ -34,7 +32,6 @@ export function Topbar() {
   async function handleSignOut() {
     await signOut();
     setMenuOpen(false);
-    router.push("/");
   }
 
   return (
