@@ -1,5 +1,6 @@
-import type { User } from "@supabase/supabase-js";
-import { getSupabaseClient } from "@/lib/supabase";
+import type { AuthChangeEvent, User } from "@supabase/supabase-js";
+import { getSupabaseBrowserClient } from "@/lib/supabase/browser";
+import { normalizeEmail } from "@/lib/auth/validation";
 
 export type AuthUser = {
   id: string;
@@ -25,42 +26,60 @@ function toAuthUser(user: User): AuthUser {
 }
 
 export async function getCurrentUser(): Promise<AuthUser | null> {
-  const { data, error } = await getSupabaseClient().auth.getUser();
+  const { data, error } = await getSupabaseBrowserClient().auth.getUser();
   if (error) return null;
   return data.user ? toAuthUser(data.user) : null;
 }
 
-export function onAuthStateChange(callback: (user: AuthUser | null) => void) {
-  return getSupabaseClient().auth.onAuthStateChange((_event, session) => {
-    callback(session?.user ? toAuthUser(session.user) : null);
+export function onAuthStateChange(
+  callback: (event: AuthChangeEvent, user: AuthUser | null, rawUser: User | null) => void,
+) {
+  return getSupabaseBrowserClient().auth.onAuthStateChange((event, session) => {
+    const rawUser = session?.user ?? null;
+    callback(event, rawUser ? toAuthUser(rawUser) : null, rawUser);
   }).data.subscription;
 }
 
 export async function signIn(email: string, password: string): Promise<AuthUser> {
-  const { data, error } = await getSupabaseClient().auth.signInWithPassword({ email, password });
+  const { data, error } = await getSupabaseBrowserClient().auth.signInWithPassword({ email: normalizeEmail(email), password });
   if (error) throw error;
   if (!data.user) throw new Error("Sign in did not return a user.");
   return toAuthUser(data.user);
 }
 
-export async function signUp(data: SignUpInput): Promise<AuthUser | null> {
-  const { data: result, error } = await getSupabaseClient().auth.signUp({
-    email: data.email,
+export async function signUp(data: SignUpInput): Promise<void> {
+  const { error } = await getSupabaseBrowserClient().auth.signUp({
+    email: normalizeEmail(data.email),
     password: data.password,
     options: { data: { full_name: data.fullName, user_type: data.userType } },
   });
   if (error) throw error;
-  if (!result.user) throw new Error("Account creation did not return a user.");
-  // With email confirmation enabled, Supabase returns a user but no authenticated session.
-  return result.session ? toAuthUser(result.user) : null;
 }
 
-export async function signOut(): Promise<void> {
-  const { error } = await getSupabaseClient().auth.signOut();
+export async function resendConfirmation(email: string): Promise<void> {
+  const { error } = await getSupabaseBrowserClient().auth.resend({
+    type: "signup",
+    email: normalizeEmail(email),
+  });
+  if (error) throw error;
+}
+
+export async function requestPasswordReset(email: string): Promise<void> {
+  const { error } = await getSupabaseBrowserClient().auth.resetPasswordForEmail(normalizeEmail(email));
+  if (error) throw error;
+}
+
+export async function updatePassword(password: string): Promise<void> {
+  const { error } = await getSupabaseBrowserClient().auth.updateUser({ password });
+  if (error) throw error;
+}
+
+export async function signOut(scope?: "global" | "local"): Promise<void> {
+  const { error } = await getSupabaseBrowserClient().auth.signOut(scope ? { scope } : undefined);
   if (error) throw error;
 }
 
 export async function getAccessToken(): Promise<string | null> {
-  const { data } = await getSupabaseClient().auth.getSession();
+  const { data } = await getSupabaseBrowserClient().auth.getSession();
   return data.session?.access_token ?? null;
 }

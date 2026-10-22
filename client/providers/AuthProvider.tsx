@@ -1,5 +1,6 @@
 "use client";
 
+import { useRouter } from "next/navigation";
 import {
   createContext,
   useCallback,
@@ -10,6 +11,7 @@ import {
 } from "react";
 import type { AuthUser, SignUpInput } from "@/lib/auth";
 import * as authApi from "@/lib/auth";
+import { ensureProfile } from "@/lib/profile";
 
 type AuthContextValue = {
   user: AuthUser | null;
@@ -24,6 +26,7 @@ const AuthContext = createContext<AuthContextValue | null>(null);
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<AuthUser | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const router = useRouter();
 
   useEffect(() => {
     let subscription: { unsubscribe: () => void } | undefined;
@@ -39,8 +42,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       });
 
     try {
-      subscription = authApi.onAuthStateChange((currentUser) => {
-        if (active) setUser(currentUser);
+      subscription = authApi.onAuthStateChange((event, currentUser, rawUser) => {
+        if (!active) return;
+        setUser(currentUser);
+        if (rawUser) void ensureProfile(rawUser);
+        if (event === "SIGNED_OUT") {
+          router.replace("/auth");
+          router.refresh();
+        }
       });
     } catch (error) {
       console.error("Failed to subscribe to auth changes", error);
@@ -50,36 +59,19 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       active = false;
       subscription?.unsubscribe();
     };
-  }, []);
+  }, [router]);
 
   const signIn = useCallback(async (email: string, password: string) => {
-    setIsLoading(true);
-    try {
-      const authUser = await authApi.signIn(email, password);
-      setUser(authUser);
-    } finally {
-      setIsLoading(false);
-    }
+    const authUser = await authApi.signIn(email, password);
+    setUser(authUser);
   }, []);
 
   const signUp = useCallback(async (data: SignUpInput) => {
-    setIsLoading(true);
-    try {
-      const authUser = await authApi.signUp(data);
-      setUser(authUser);
-    } finally {
-      setIsLoading(false);
-    }
+    await authApi.signUp(data);
   }, []);
 
   const signOut = useCallback(async () => {
-    setIsLoading(true);
-    try {
-      await authApi.signOut();
-      setUser(null);
-    } finally {
-      setIsLoading(false);
-    }
+    await authApi.signOut();
   }, []);
 
   const value = useMemo(

@@ -1,3 +1,4 @@
+using LumenPatrons.Api.Auth;
 using LumenPatrons.Api.Data;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
@@ -31,7 +32,7 @@ builder.Services
     {
         options.Authority = $"{supabaseUrl}/auth/v1";
         options.MetadataAddress = $"{supabaseUrl}/auth/v1/.well-known/openid-configuration";
-        options.RequireHttpsMetadata = true;
+        options.RequireHttpsMetadata = !SupabaseUrl.IsLoopbackHttp(supabaseUrl);
         options.MapInboundClaims = false;
         options.TokenValidationParameters = new TokenValidationParameters
         {

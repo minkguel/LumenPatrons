@@ -50,7 +50,16 @@ export async function getFundingOpportunities(): Promise<FundingOpportunity[]> {
   }
 }
 
-export async function authorizedFetch(path: string, init: RequestInit = {}) {
+export type AuthorizedFetchOptions = {
+  /** Return a 401 as-is instead of signing out and redirecting to /auth. */
+  skipAuthRecovery?: boolean;
+};
+
+export async function authorizedFetch(
+  path: string,
+  init: RequestInit = {},
+  options: AuthorizedFetchOptions = {},
+) {
   const accessToken = await getAccessToken();
   if (!accessToken) throw new Error("You must be signed in to perform this action.");
 
@@ -60,6 +69,18 @@ export async function authorizedFetch(path: string, init: RequestInit = {}) {
     headers.set("Content-Type", "application/json");
   }
 
-  return fetch(`${API_BASE}${path}`, { ...init, headers, cache: "no-store" });
+  const response = await fetch(`${API_BASE}${path}`, { ...init, headers, cache: "no-store" });
+
+  if (response.status === 401 && !options.skipAuthRecovery && typeof window !== "undefined") {
+    try {
+      await signOut("local");
+    } catch (error) {
+      console.error("Failed to clear expired session", error);
+    }
+    const next = encodeURIComponent(window.location.pathname + window.location.search);
+    window.location.assign(`/auth?next=${next}&reason=expired`);
+  }
+
+  return response;
 }
-import { getAccessToken } from "@/lib/auth";
+import { getAccessToken, signOut } from "@/lib/auth";
