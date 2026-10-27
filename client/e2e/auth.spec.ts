@@ -113,11 +113,11 @@ test("signed-out deep link returns after login", async ({ page }) => {
   const { email } = await signUpConfirmed(page);
   await page.context().clearCookies();
 
-  await page.goto("/applications?status=draft");
+  await page.goto("/saved-patrons?status=draft");
   await expectLocation(page, /^\/auth\?.*next=/);
 
   await signIn(page, email, PASSWORD);
-  await expectLocation(page, "/applications?status=draft");
+  await expectLocation(page, "/saved-patrons?status=draft");
 });
 
 test("sign out then / redirects to /auth", async ({ page }) => {

@@ -1,16 +1,16 @@
-import { ApplicationList } from "@/components/applications/ApplicationList";
+import { SavedPatronList } from "@/components/saved-patrons/SavedPatronList";
 
-export default function ApplicationsPage() {
+export default function SavedPatronsPage() {
   return (
     <div className="p-8">
       <div className="max-w-4xl mx-auto">
         <h2 className="text-3xl font-bold text-foreground mb-2">
-          My Applications
+          Saved Patrons
         </h2>
         <p className="text-foreground/55 mb-8">
-          Track saved and submitted funding opportunities in one place.
+          Keep track of your saved funding opportunities.
         </p>
-        <ApplicationList />
+        <SavedPatronList />
       </div>
     </div>
   );

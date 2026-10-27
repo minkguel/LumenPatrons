@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import { PUBLIC_AUTH_PATHS, decideRedirect, hasSessionCookie, safeRedirect } from "@/lib/auth/redirects";
 
 describe("safeRedirect", () => {
-  it.each(["/applications", "/a?b=1", "/settings#x"])("keeps %s", (p) => expect(safeRedirect(p)).toBe(p));
+  it.each(["/saved-patrons", "/a?b=1", "/settings#x"])("keeps %s", (p) => expect(safeRedirect(p)).toBe(p));
   it.each(["//evil.com", "/\\evil.com", "https://evil.com", "javascript:alert(1)", "", null, undefined, "applications"])(
     "rejects %s", (p) => expect(safeRedirect(p as string)).toBe("/"));
   it.each(["/\t/evil.com", "/\n/evil.com", "/\t\\evil.com", "/\r//evil.com", "/a\tb"])(
@@ -18,8 +18,8 @@ describe("safeRedirect", () => {
 
 describe("decideRedirect", () => {
   it("sends signed-out app visits to /auth with next incl. query", () =>
-    expect(decideRedirect("/applications", "?status=draft", false, false))
-      .toEqual({ redirectTo: "/auth?next=%2Fapplications%3Fstatus%3Ddraft" }));
+    expect(decideRedirect("/saved-patrons", "?status=draft", false, false))
+      .toEqual({ redirectTo: "/auth?next=%2Fsaved-patrons%3Fstatus%3Ddraft" }));
   it("adds reason=expired when a session cookie was present", () =>
     expect(decideRedirect("/", "", false, true)).toEqual({ redirectTo: "/auth?next=%2F&reason=expired" }));
   it("sends signed-in /auth to safeRedirect(next)", () =>
@@ -34,7 +34,7 @@ describe("decideRedirect", () => {
     expect(decideRedirect("/auth/reset-password", "", false, false)).toEqual({ redirectTo: "/auth/forgot-password" }));
   it("passes signed-in reset-password and app pages", () => {
     expect(decideRedirect("/auth/reset-password", "", true, true)).toBeNull();
-    expect(decideRedirect("/applications", "", true, true)).toBeNull();
+    expect(decideRedirect("/saved-patrons", "", true, true)).toBeNull();
   });
   it("passes signed-out /auth", () => expect(decideRedirect("/auth", "", false, false)).toBeNull());
   it("treats /auth with a query as the /auth page", () => {
