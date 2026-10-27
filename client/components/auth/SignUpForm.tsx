@@ -8,7 +8,7 @@ import { Input } from "@/components/ui/Input";
 import { Select } from "@/components/ui/Select";
 import { toAuthMessage } from "@/lib/auth/messages";
 import { normalizeEmail, validateSignUp } from "@/lib/auth/validation";
-import { userTypeOptions } from "@/lib/mock/user";
+import { userTypeOptions } from "@/lib/options";
 import { useAuth } from "@/providers/AuthProvider";
 
 export function SignUpForm() {

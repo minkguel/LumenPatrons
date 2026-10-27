@@ -84,3 +84,24 @@ export async function authorizedFetch(
   return response;
 }
 import { getAccessToken, signOut } from "@/lib/auth";
+
+export type SavedOpportunity = {
+  id: string;
+  status: "Saved" | "Applied" | "Submitted";
+  attachedDocumentUrl?: string | null;
+  savedAt: string;
+  opportunity: FundingOpportunity;
+};
+
+export async function getSavedOpportunities(): Promise<SavedOpportunity[]> {
+  const response = await authorizedFetch("/api/v1/savedopportunities");
+  if (!response.ok) throw new Error(`Failed to load saved opportunities (${response.status}).`);
+  return response.json();
+}
+
+export async function deleteSavedOpportunity(id: string): Promise<void> {
+  const response = await authorizedFetch(`/api/v1/savedopportunities/${id}`, { method: "DELETE" });
+  if (!response.ok && response.status !== 404) {
+    throw new Error(`Failed to remove saved opportunity (${response.status}).`);
+  }
+}

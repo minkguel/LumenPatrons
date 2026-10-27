@@ -26,8 +26,8 @@ export function Sidebar({ systemStatus }: SidebarProps) {
           <NavLink href="/" icon="🔍">
             Discover Patrons
           </NavLink>
-          <NavLink href="/applications" icon="📁">
-            My Applications
+          <NavLink href="/saved-patrons" icon="📁">
+            Saved Patrons
           </NavLink>
           <NavLink href="/settings" icon="⚙️">
             Settings

@@ -68,3 +68,24 @@ export function resetProfileStateForTests() {
   inFlight.clear();
   confirmed.clear();
 }
+
+export type UserProfile = {
+  id: string;
+  email: string;
+  fullName: string;
+  userType: string;
+  createdAt: string;
+};
+
+export async function getMyProfile(): Promise<UserProfile | null> {
+  const response = await authorizedFetch(PROFILE_PATH);
+  if (response.status === 404) return null;
+  if (!response.ok) throw new Error(`Failed to load profile (${response.status}).`);
+  return response.json();
+}
+
+export async function updateMyProfile(input: { fullName: string; userType: string }): Promise<UserProfile> {
+  const response = await authorizedFetch(PROFILE_PATH, { method: "PUT", body: JSON.stringify(input) });
+  if (!response.ok) throw new Error(`Failed to save profile (${response.status}).`);
+  return response.json();
+}

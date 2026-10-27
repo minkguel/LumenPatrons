@@ -7,7 +7,7 @@ This README consolidates the project goal, tech stack, repo layout, what’s imp
 ---
 
 ## Project goal
-Make it easy to discover, save and apply for non‑dilutive funding opportunities (grants, stipends, institutional programs) by providing a curated feed, saved applications, and tooling to manage applications and alerts.
+Make it easy to discover, save and apply for non‑dilutive funding opportunities (grants, stipends, institutional programs) by providing a curated feed, saved patrons, and tooling to manage saved opportunities and alerts.
 
 ---
 
@@ -38,13 +38,13 @@ Make it easy to discover, save and apply for non‑dilutive funding opportunitie
   - `client/app/(auth)` — auth pages & layout scaffold.
 - Components:
   - `client/components/layout/*` — Sidebar, Topbar, AppShell, StatusWidget, NavLink.
-  - Other UI components for applications, settings, and UI primitives under `client/components/*`.
+  - Other UI components for saved patrons, settings, and UI primitives under `client/components/*`.
 - Authentication:
   - `client/providers/AuthProvider.tsx` & `client/lib/auth.ts` — Supabase Auth sign-in, sign-up, sign-out, and session restoration.
 - API client helper:
   - `client/lib/api.ts` — `getSystemStatus()` calls backend `/api/v1/status`.
 - Notes:
-  - Discover uses the real API. Applications and settings still use mock data and need wiring to the protected endpoints.
+  - Discover, Saved Patrons and settings use the real API. Settings preferences are not persisted yet.
 
 ### Backend (server)
 - Startup: `server/Program.cs`
@@ -190,7 +190,7 @@ cd client && npm run e2e
 See the `e2e` job in `.github/workflows/security-tests.yml` for the exact CI steps.
 
 ## Current status
-- Frontend: UI shell and pages implemented; real Supabase Auth and funding API are wired; applications/settings remain mock.
+- Frontend: UI shell and pages implemented; real Supabase Auth, funding, saved-opportunity and profile APIs are wired.
 - Backend: controllers, models, DbContext and a status endpoint implemented; migrations are present.
 - Security: JWT validation, owner-scoped user endpoints, admin-only funding mutations, DTO responses, uniqueness constraints, and Supabase RLS policies are implemented in code.
 
