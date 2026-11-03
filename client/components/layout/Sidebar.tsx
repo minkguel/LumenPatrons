@@ -13,10 +13,10 @@ export function Sidebar({ systemStatus }: SidebarProps) {
       <div>
         <div className="p-5 border-b border-lumen-teal/15 flex items-center justify-center">
           <Image
-            src="/LumenPatronsLogo.png"
+            src="/brand/lumenpatrons-logo-horizontal.svg"
             alt="LumenPatrons"
-            width={500}
-            height={300}
+            width={208}
+            height={41}
             style={{ objectFit: "contain" }}
             priority
           />
