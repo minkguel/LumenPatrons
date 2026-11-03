@@ -49,6 +49,7 @@
     --color-patron-gold: var(--accent);
     --color-patron-gold-dark: var(--accent-text);
     --color-patron-gold-light: var(--accent-soft);
+    --color-on-accent: var(--on-accent); /* text on gold backgrounds */
     --color-bg-cream: var(--bg);
     --font-sans: var(--font-body), system-ui, sans-serif;
     --font-mono: "SFMono-Regular", Consolas, "Liberation Mono", monospace;
