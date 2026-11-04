@@ -71,7 +71,7 @@ export function SignInForm() {
         </Link>
       </p>
       {error && (
-        <p className="text-sm text-red-500 bg-red-50 px-3 py-2 rounded-lg">{error}</p>
+        <p className="text-sm text-danger bg-danger-soft px-3 py-2 rounded-lg">{error}</p>
       )}
       {needsConfirmation && <ResendButton email={normalizeEmail(form.email)} />}
       <Button type="submit" className="w-full" disabled={pending}>

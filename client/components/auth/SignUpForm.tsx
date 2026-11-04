@@ -82,7 +82,7 @@ export function SignUpForm() {
         options={userTypeOptions.map((type) => ({ value: type, label: type }))}
       />
       {error && (
-        <p className="text-sm text-red-500 bg-red-50 px-3 py-2 rounded-lg">{error}</p>
+        <p className="text-sm text-danger bg-danger-soft px-3 py-2 rounded-lg">{error}</p>
       )}
       <Button type="submit" className="w-full" disabled={pending}>
         {pending ? "Creating account..." : "Create Account"}

@@ -70,7 +70,7 @@ export default function Home() {
         {loading ? (
           <div className="text-center text-foreground/55">Loading...</div>
         ) : error ? (
-          <div className="text-center text-red-600">{error}</div>
+          <div className="text-center text-danger">{error}</div>
         ) : patrons && patrons.length > 0 ? (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {patrons.map((patron) => (

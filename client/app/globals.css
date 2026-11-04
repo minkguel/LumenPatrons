@@ -29,6 +29,12 @@
     --accent-text: #8F5610;
     --accent-soft: #FBEBD0;
 
+    /* Messages */
+    --danger: #B42318;
+    --danger-soft: #FDECEA;
+    --success: #1F7A4D;
+    --success-soft: #E3F4EA;
+
     /* Navigation */
     --nav-active-bg: #17646F;
     --nav-active-text: #FAF7F0;
@@ -63,6 +69,10 @@
     --nav-active-bg: #1A3A40;
     --nav-active-text: #7CC4CE;
     --switch-off: #3B575D;
+    --danger: #F4A29A;
+    --danger-soft: #3D1F1E;
+    --success: #7DD3A0;
+    --success-soft: #173528;
 }
 
 /* Same values, for when the OS is dark and no theme has been picked */
@@ -87,6 +97,10 @@
         --nav-active-bg: #1A3A40;
         --nav-active-text: #7CC4CE;
         --switch-off: #3B575D;
+        --danger: #F4A29A;
+        --danger-soft: #3D1F1E;
+        --success: #7DD3A0;
+        --success-soft: #173528;
     }
 }
 
@@ -99,6 +113,10 @@
     --color-lumen-teal-light: var(--primary-soft);
     --color-on-primary: var(--on-primary); /* text on teal backgrounds */
     --color-surface: var(--surface); /* cards, top bar */
+    --color-danger: var(--danger);
+    --color-danger-soft: var(--danger-soft);
+    --color-success: var(--success);
+    --color-success-soft: var(--success-soft);
     --color-patron-gold: var(--accent);
     --color-patron-gold-dark: var(--accent-text);
     --color-patron-gold-light: var(--accent-soft);

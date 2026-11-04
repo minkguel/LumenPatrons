@@ -134,12 +134,12 @@ export function SettingsForm() {
             }))}
           />
           {profileSaved && (
-            <p className="text-sm text-green-600 bg-green-50 px-3 py-2 rounded-lg">
+            <p className="text-sm text-success bg-success-soft px-3 py-2 rounded-lg">
               Profile saved successfully!
             </p>
           )}
           {profileError && (
-            <p className="text-sm text-red-600 bg-red-50 px-3 py-2 rounded-lg">
+            <p className="text-sm text-danger bg-danger-soft px-3 py-2 rounded-lg">
               {profileError}
             </p>
           )}
@@ -204,7 +204,7 @@ export function SettingsForm() {
           />
 
           {preferencesSaved && (
-            <p className="text-sm text-green-600 bg-green-50 px-3 py-2 rounded-lg">
+            <p className="text-sm text-success bg-success-soft px-3 py-2 rounded-lg">
               Preferences saved successfully!
             </p>
           )}
