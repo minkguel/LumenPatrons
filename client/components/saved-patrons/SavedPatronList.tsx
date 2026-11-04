@@ -89,8 +89,8 @@ export function SavedPatronList() {
             onClick={() => setFilter(status)}
             className={`px-3 py-1.5 text-sm font-medium rounded-lg transition-colors ${
               filter === status
-                ? "bg-lumen-teal text-white"
-                : "bg-white border border-lumen-teal/20 text-foreground/60 hover:text-lumen-teal hover:border-lumen-teal/40"
+                ? "bg-lumen-teal text-on-primary"
+                : "bg-surface border border-lumen-teal/20 text-foreground/60 hover:text-lumen-teal hover:border-lumen-teal/40"
             }`}
           >
             {status}

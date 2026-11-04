@@ -35,7 +35,7 @@ export function Topbar() {
   }
 
   return (
-    <header className="h-16 border-b border-lumen-teal/15 bg-white flex items-center justify-between px-8 shadow-sm shrink-0">
+    <header className="h-16 border-b border-lumen-teal/15 bg-surface flex items-center justify-between px-8 shadow-sm shrink-0">
       <div className="relative w-96">
         <input
           type="text"
@@ -53,7 +53,7 @@ export function Topbar() {
             onClick={() => setMenuOpen((open) => !open)}
             className="flex items-center gap-2 px-2 py-1.5 rounded-lg hover:bg-lumen-teal-light transition-colors"
           >
-            <span className="w-8 h-8 rounded-full bg-lumen-teal text-white text-sm font-semibold flex items-center justify-center">
+            <span className="w-8 h-8 rounded-full bg-lumen-teal text-on-primary text-sm font-semibold flex items-center justify-center">
               {getInitials(user.fullName)}
             </span>
             <span className="text-sm font-medium text-foreground/80 hidden sm:block">
@@ -62,7 +62,7 @@ export function Topbar() {
           </button>
 
           {menuOpen && (
-            <div className="absolute right-0 mt-2 w-44 bg-white border border-lumen-teal/15 rounded-lg shadow-md py-1 z-10">
+            <div className="absolute right-0 mt-2 w-44 bg-surface border border-lumen-teal/15 rounded-lg shadow-md py-1 z-10">
               <Link
                 href="/settings"
                 onClick={() => setMenuOpen(false)}

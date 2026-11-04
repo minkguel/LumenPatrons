@@ -20,8 +20,8 @@ export function AuthForm() {
           onClick={() => setTab("signin")}
           className={`flex-1 py-2.5 text-sm font-medium transition-colors ${
             tab === "signin"
-              ? "bg-lumen-teal text-white"
-              : "bg-white text-foreground/60 hover:text-lumen-teal"
+              ? "bg-lumen-teal text-on-primary"
+              : "bg-surface text-foreground/60 hover:text-lumen-teal"
           }`}
         >
           Sign In
@@ -31,15 +31,15 @@ export function AuthForm() {
           onClick={() => setTab("signup")}
           className={`flex-1 py-2.5 text-sm font-medium transition-colors ${
             tab === "signup"
-              ? "bg-lumen-teal text-white"
-              : "bg-white text-foreground/60 hover:text-lumen-teal"
+              ? "bg-lumen-teal text-on-primary"
+              : "bg-surface text-foreground/60 hover:text-lumen-teal"
           }`}
         >
           Sign Up
         </button>
       </div>
 
-      <div className="bg-white border border-lumen-teal/15 rounded-xl p-6 shadow-sm">
+      <div className="bg-surface border border-lumen-teal/15 rounded-xl p-6 shadow-sm">
         {tab === "signin" ? <SignInForm /> : <SignUpForm />}
       </div>
     </div>

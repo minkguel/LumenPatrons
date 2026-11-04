@@ -12,7 +12,7 @@ export function AuthLinkError() {
   const [email, setEmail] = useState("");
 
   return (
-    <div className="w-full max-w-md bg-white border border-lumen-teal/15 rounded-xl p-6 shadow-sm space-y-4">
+    <div className="w-full max-w-md bg-surface border border-lumen-teal/15 rounded-xl p-6 shadow-sm space-y-4">
       {isRecovery ? (
         <>
           <h1 className="text-lg font-semibold text-foreground">

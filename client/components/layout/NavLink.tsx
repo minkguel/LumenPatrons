@@ -18,7 +18,7 @@ export function NavLink({ href, icon, children }: NavLinkProps) {
       href={href}
       className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-colors font-medium ${
         isActive
-          ? "bg-lumen-teal text-white shadow-sm"
+          ? "bg-lumen-teal text-on-primary shadow-sm"
           : "text-foreground/60 hover:text-lumen-teal hover:bg-lumen-teal-light"
       }`}
     >
