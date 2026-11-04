@@ -1,7 +1,9 @@
 @import "tailwindcss";
 
 :root {
-    /* New theme (from client/design/lumenpatrons-theme.css) — light only for now */
+    /* Theme from client/design/lumenpatrons-theme.css.
+       Light by default, dark via <html data-theme="dark">,
+       and the OS setting decides when no data-theme is set. */
     color-scheme: light;
 
     /* Surfaces */
@@ -16,6 +18,7 @@
 
     /* Teal (primary) */
     --primary: #17646F;
+    --primary-hover: #0F4C55;
     --on-primary: #FAF7F0;
     --primary-soft: #DDEDEF;
     --on-primary-soft: #17646F;
@@ -39,13 +42,63 @@
     --radius-lg: 22px;
 }
 
+/* Dark theme: deep teal, never pure black; warm off-white text */
+:root[data-theme="dark"] {
+    color-scheme: dark;
+    --bg: #0E1E22;
+    --surface: #15292E;
+    --sunken: #0A171A;
+    --line: #243F45;
+    --text: #EDE8DC;
+    --muted: #A2B4B7;
+    --primary: #7CC4CE;
+    --primary-hover: #9AD5DD;
+    --on-primary: #0E1E22;
+    --primary-soft: #1A3A40;
+    --on-primary-soft: #7CC4CE;
+    --accent: #EBB25E;
+    --on-accent: #0E1E22;
+    --accent-text: #EBB25E;
+    --accent-soft: #3A2C17;
+    --nav-active-bg: #1A3A40;
+    --nav-active-text: #7CC4CE;
+    --switch-off: #3B575D;
+}
+
+/* Same values, for when the OS is dark and no theme has been picked */
+@media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]):not([data-theme="dark"]) {
+        color-scheme: dark;
+        --bg: #0E1E22;
+        --surface: #15292E;
+        --sunken: #0A171A;
+        --line: #243F45;
+        --text: #EDE8DC;
+        --muted: #A2B4B7;
+        --primary: #7CC4CE;
+        --primary-hover: #9AD5DD;
+        --on-primary: #0E1E22;
+        --primary-soft: #1A3A40;
+        --on-primary-soft: #7CC4CE;
+        --accent: #EBB25E;
+        --on-accent: #0E1E22;
+        --accent-text: #EBB25E;
+        --accent-soft: #3A2C17;
+        --nav-active-bg: #1A3A40;
+        --nav-active-text: #7CC4CE;
+        --switch-off: #3B575D;
+    }
+}
+
 @theme inline {
     /* Old names now point at the new theme variables */
     --color-background: var(--bg);
     --color-foreground: var(--text);
     --color-lumen-teal: var(--primary);
-    --color-lumen-teal-dark: #0F4C55; /* hover shade; no token in the theme */
+    --color-lumen-teal-dark: var(--primary-hover);
     --color-lumen-teal-light: var(--primary-soft);
+    --color-on-primary: var(--on-primary); /* text on teal backgrounds */
+    --color-surface: var(--surface); /* cards, top bar */
     --color-patron-gold: var(--accent);
     --color-patron-gold-dark: var(--accent-text);
     --color-patron-gold-light: var(--accent-soft);
