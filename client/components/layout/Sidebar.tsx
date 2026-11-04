@@ -1,5 +1,5 @@
-import Image from "next/image";
 import type { SystemStatus } from "@/lib/api";
+import { Logo } from "@/components/ui/Logo";
 import { NavLink } from "./NavLink";
 import { StatusWidget } from "./StatusWidget";
 
@@ -12,14 +12,7 @@ export function Sidebar({ systemStatus }: SidebarProps) {
     <aside className="w-64 bg-bg-cream border-r border-lumen-teal/15 flex flex-col justify-between shadow-sm shrink-0">
       <div>
         <div className="p-5 border-b border-lumen-teal/15 flex items-center justify-center">
-          <Image
-            src="/brand/lumenpatrons-logo-horizontal.svg"
-            alt="LumenPatrons"
-            width={208}
-            height={41}
-            style={{ objectFit: "contain" }}
-            priority
-          />
+          <Logo width={208} height={41} />
         </div>
 
         <nav className="p-4 space-y-1.5">
