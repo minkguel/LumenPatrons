@@ -140,9 +140,9 @@ export function SavedPatronList() {
                     {item.opportunity.patronName}
                   </p>
                   <div className="flex flex-wrap gap-4 text-sm">
-                    {item.opportunity.minimumAmount != null && (
+                    {item.opportunity.estimatedAmount != null && (
                       <span className="text-patron-gold font-semibold">
-                        {formatAmount(item.opportunity.minimumAmount)}
+                        {formatAmount(item.opportunity.estimatedAmount)}
                       </span>
                     )}
                     {item.opportunity.deadline && (

@@ -36,20 +36,36 @@ namespace LumenPatrons.Api.Migrations
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("timestamp with time zone");
 
+                    b.Property<string>("Currency")
+                        .HasMaxLength(3)
+                        .HasColumnType("character varying(3)");
+
                     b.Property<DateTime?>("Deadline")
                         .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("Description")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("Eligibility")
+                        .HasColumnType("text");
+
+                    b.Property<decimal?>("EstimatedAmount")
+                        .HasColumnType("decimal(18,2)");
 
                     b.Property<string>("ExternalUrl")
                         .IsRequired()
                         .HasColumnType("text");
 
-                    b.Property<decimal?>("MinimumAmount")
-                        .HasColumnType("decimal(18,2)");
-
                     b.Property<string>("PatronName")
                         .IsRequired()
                         .HasMaxLength(150)
                         .HasColumnType("character varying(150)");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)");
 
                     b.Property<string>("Title")
                         .IsRequired()

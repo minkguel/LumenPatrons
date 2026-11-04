@@ -32,8 +32,12 @@ export type FundingOpportunity = {
   title: string;
   patronName: string;
   category?: string[];
-  minimumAmount?: number | null;
+  description?: string;
+  eligibility?: string | null;
+  estimatedAmount?: number | null;
+  currency?: string | null;
   deadline?: string; // ISO string from backend
+  status?: string;
   externalUrl?: string;
   createdAt?: string;
 };

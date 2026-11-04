@@ -7,8 +7,12 @@ public record FundingOpportunityResponse(
     string Title,
     string PatronName,
     IReadOnlyCollection<string> Category,
-    decimal? MinimumAmount,
+    string Description,
+    string? Eligibility,
+    decimal? EstimatedAmount,
+    string? Currency,
     DateTime? Deadline,
+    string Status,
     string ExternalUrl,
     DateTime CreatedAt);
 
@@ -41,8 +45,8 @@ public sealed record UpdateUserProfileRequest(
 public static class ContractMappings
 {
     public static FundingOpportunityResponse ToResponse(this Models.FundingOpportunity item) =>
-        new(item.Id, item.Title, item.PatronName, item.Category, item.MinimumAmount,
-            item.Deadline, item.ExternalUrl, item.CreatedAt);
+        new(item.Id, item.Title, item.PatronName, item.Category, item.Description, item.Eligibility,
+            item.EstimatedAmount, item.Currency, item.Deadline, item.Status, item.ExternalUrl, item.CreatedAt);
 
     public static UserProfileResponse ToResponse(this Models.UserProfile item) =>
         new(item.Id, item.Email, item.FullName, item.UserType, item.CreatedAt);

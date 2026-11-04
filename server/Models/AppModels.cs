@@ -19,8 +19,12 @@ public class FundingOpportunity
     [Required, MaxLength(200)] public string Title { get; set; } = string.Empty;
     [Required, MaxLength(150)] public string PatronName { get; set; } = string.Empty;
     public List<string> Category { get; set; } = new List<string>();
-    [Column(TypeName = "decimal(18,2)")] public decimal? MinimumAmount { get; set; }
+    public string Description { get; set; } = string.Empty;
+    public string? Eligibility { get; set; }
+    [Column(TypeName = "decimal(18,2)")] public decimal? EstimatedAmount { get; set; }
+    [MaxLength(3)] public string? Currency { get; set; }
     public DateTime? Deadline { get; set; }
+    [Required, MaxLength(20)] public string Status { get; set; } = "Open";
     public string ExternalUrl { get; set; } = string.Empty;
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
     public ICollection<SavedOpportunity> SavedByUsers { get; set; } = new List<SavedOpportunity>();

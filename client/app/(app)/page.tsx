@@ -89,7 +89,7 @@ export default function Home() {
                 </p>
                 <div className="flex justify-between items-center text-sm border-t border-lumen-teal/10 pt-4">
                   <span className="text-patron-gold font-semibold">
-                    {formatAmount(patron.minimumAmount)}
+                    {formatAmount(patron.estimatedAmount)}
                   </span>
                   <span className="text-foreground/40">
                     {daysUntil(patron.deadline)}
