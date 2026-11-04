@@ -3,7 +3,12 @@
 import { useEffect, useState } from "react";
 import { Badge } from "@/components/ui/Badge";
 import { Card } from "@/components/ui/Card";
-import { getFundingOpportunities, type FundingOpportunity } from "@/lib/api";
+import { SaveButton } from "@/components/discover/SaveButton";
+import {
+  getFundingOpportunities,
+  getSavedOpportunities,
+  type FundingOpportunity,
+} from "@/lib/api";
 
 function formatAmount(amount?: number | null) {
   if (!amount && amount !== 0) return "—";
@@ -33,9 +38,20 @@ export default function Home() {
   const [patrons, setPatrons] = useState<FundingOpportunity[] | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [savedIds, setSavedIds] = useState<Set<string>>(new Set());
 
   useEffect(() => {
     let mounted = true;
+    getSavedOpportunities()
+      .then((items) => {
+        if (!mounted) return;
+        setSavedIds(new Set(items.map((item) => item.opportunity.id)));
+      })
+      .catch((err) => {
+        // Discover still works without this; cards just start as unsaved.
+        console.error(err);
+      });
+
     getFundingOpportunities()
       .then((data) => {
         if (!mounted) return;
@@ -95,6 +111,7 @@ export default function Home() {
                     {daysUntil(patron.deadline)}
                   </span>
                 </div>
+                <SaveButton opportunityId={patron.id} alreadySaved={savedIds.has(patron.id)} />
               </Card>
             ))}
           </div>

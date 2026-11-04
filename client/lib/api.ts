@@ -103,6 +103,22 @@ export async function getSavedOpportunities(): Promise<SavedOpportunity[]> {
   return response.json();
 }
 
+export async function saveOpportunity(fundingOpportunityId: string): Promise<void> {
+  const response = await authorizedFetch("/api/v1/savedopportunities", {
+    method: "POST",
+    body: JSON.stringify({ fundingOpportunityId }),
+  });
+  if (response.ok) return;
+
+  // The server uses 409 for both "already saved" and "no profile yet".
+  if (response.status === 409) {
+    const message = await response.text();
+    if (message.includes("already saved")) return;
+    throw new Error("Create your user profile before saving opportunities.");
+  }
+  throw new Error("Could not save this opportunity. Please try again.");
+}
+
 export async function deleteSavedOpportunity(id: string): Promise<void> {
   const response = await authorizedFetch(`/api/v1/savedopportunities/${id}`, { method: "DELETE" });
   if (!response.ok && response.status !== 404) {
