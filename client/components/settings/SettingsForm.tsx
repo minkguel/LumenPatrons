@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
 import { Input } from "@/components/ui/Input";
 import { Select } from "@/components/ui/Select";
+import { ThemePicker } from "@/components/settings/ThemePicker";
 import { categoryOptions, userTypeOptions } from "@/lib/options";
 import { getMyProfile, updateMyProfile } from "@/lib/profile";
 import { useAuth } from "@/providers/AuthProvider";
@@ -147,6 +148,14 @@ export function SettingsForm() {
             {isSaving ? "Saving…" : "Save Changes"}
           </Button>
         </form>
+      </Card>
+
+      <Card>
+        <h3 className="text-lg font-bold text-foreground mb-2">Appearance</h3>
+        <p className="text-xs text-foreground/45 mb-4">
+          System follows your device. Saved on this device only.
+        </p>
+        <ThemePicker />
       </Card>
 
       <Card>

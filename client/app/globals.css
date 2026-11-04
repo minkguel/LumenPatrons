@@ -122,6 +122,7 @@
     --color-lumen-teal-light: var(--primary-soft);
     --color-on-primary: var(--on-primary); /* text on teal backgrounds */
     --color-surface: var(--surface); /* cards, top bar */
+    --color-sunken: var(--sunken); /* segmented controls */
     --color-danger: var(--danger);
     --color-danger-soft: var(--danger-soft);
     --color-success: var(--success);

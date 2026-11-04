@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Atkinson_Hyperlegible, Bricolage_Grotesque } from "next/font/google";
+import { ThemeScript } from "@/components/layout/ThemeScript";
 import { AuthProvider } from "@/providers/AuthProvider";
 import "./globals.css";
 
@@ -29,8 +30,13 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className={`${display.variable} ${body.variable} h-full antialiased`}>
+    <html
+      lang="en"
+      className={`${display.variable} ${body.variable} h-full antialiased`}
+      suppressHydrationWarning // ThemeScript sets data-theme before React loads
+    >
       <body className="min-h-full flex flex-col">
+        <ThemeScript />
         <AuthProvider>{children}</AuthProvider>
       </body>
     </html>
