@@ -67,6 +67,8 @@ builder.Services.AddAuthorization(options =>
         }));
 });
 
+builder.Services.AddScoped<LumenPatrons.Api.Services.OpportunityImporter>();
+
 builder.Services.AddControllers();
 
 

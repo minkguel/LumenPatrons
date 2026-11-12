@@ -1,4 +1,6 @@
 using System.ComponentModel.DataAnnotations;
+using System.Text.Json;
+using System.Text.Json.Serialization;
 
 namespace LumenPatrons.Api.Contracts;
 
@@ -41,6 +43,38 @@ public record UserProfileResponse(
 public sealed record UpdateUserProfileRequest(
     [param: Required, MaxLength(100)] string FullName,
     [param: Required, MaxLength(50)] string UserType);
+
+public sealed record FundingOpportunityRequest(
+    [param: Required, MaxLength(200)] string Title,
+    [param: Required, MaxLength(150)] string PatronName,
+    List<string>? Category,
+    string? Description,
+    string? Eligibility,
+    decimal? EstimatedAmount,
+    [param: MaxLength(3)] string? Currency,
+    DateTime? Deadline,
+    [param: MaxLength(20)] string? Status,
+    string? ExternalUrl);
+
+// One scraper row. Single fields are raw JSON values so a wrongly-shaped field
+// (e.g. a number where text is expected) becomes blank instead of failing the upload.
+public sealed record ImportOpportunityItem
+{
+    [JsonPropertyName("title")] public JsonElement? Title { get; init; }
+    [JsonPropertyName("patron_name")] public JsonElement? PatronName { get; init; }
+    [JsonPropertyName("category")] public JsonElement? Category { get; init; }
+    [JsonPropertyName("description")] public JsonElement? Description { get; init; }
+    [JsonPropertyName("eligibility")] public JsonElement? Eligibility { get; init; }
+    [JsonPropertyName("estimated_amount")] public JsonElement? EstimatedAmount { get; init; }
+    [JsonPropertyName("minimum_amount")] public JsonElement? MinimumAmount { get; init; }
+    [JsonPropertyName("currency")] public JsonElement? Currency { get; init; }
+    [JsonPropertyName("deadline")] public JsonElement? Deadline { get; init; }
+    [JsonPropertyName("external_url")] public JsonElement? ExternalUrl { get; init; }
+}
+
+public sealed record ImportError(int Index, string Reason);
+
+public sealed record ImportResult(int Created, int Updated, int Skipped, IReadOnlyList<ImportError> Errors);
 
 public static class ContractMappings
 {
