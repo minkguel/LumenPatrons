@@ -1,3 +1,4 @@
+using System.ComponentModel.DataAnnotations;
 using LumenPatrons.Api.Data;
 using LumenPatrons.Api.Models;
 using LumenPatrons.Api.Contracts;
@@ -13,6 +14,7 @@ namespace LumenPatrons.Api.Controllers;
 public class FundingOpportunitiesController : ControllerBase
 {
     private const int MaxImportItems = 500;
+    private const int MaxListRows = 200;
     private readonly AppDbContext _db;
 
     public FundingOpportunitiesController(AppDbContext db)
@@ -20,24 +22,66 @@ public class FundingOpportunitiesController : ControllerBase
         _db = db;
     }
 
-    // GET: api/v1/fundingopportunities
+    // GET: api/v1/fundingopportunities?q=&category=&includeClosed=false
     [HttpGet]
     [AllowAnonymous]
     public async Task<ActionResult<IEnumerable<FundingOpportunityResponse>>> GetAll(
-        [FromQuery] string? category = null)
+        [FromQuery, MaxLength(100)] string? q = null,
+        [FromQuery] string? category = null,
+        [FromQuery] bool includeClosed = false)
     {
-        var query = _db.FundingOpportunities.AsQueryable();
+        var query = _db.FundingOpportunities.AsNoTracking();
 
-        if (!string.IsNullOrEmpty(category))
-            query = query.Where(f => f.Category != null && f.Category.Contains(category));
+        if (!includeClosed)
+        {
+            var now = DateTime.UtcNow;
+            query = query.Where(f => f.Status != "Closed" && (f.Deadline == null || f.Deadline >= now));
+        }
 
-        var opportunities = await query.AsNoTracking()
-            .OrderByDescending(f => f.CreatedAt).ToListAsync();
-        return Ok(opportunities.Select(item => item.ToResponse()));
+        var term = q?.Trim().ToLowerInvariant();
+        if (!string.IsNullOrEmpty(term))
+        {
+            query = query.Where(f =>
+                f.Title.ToLower().Contains(term) ||
+                f.PatronName.ToLower().Contains(term) ||
+                f.Description.ToLower().Contains(term));
+        }
+
+        var ordered = query.OrderByDescending(f => f.CreatedAt);
+
+        if (string.IsNullOrWhiteSpace(category))
+        {
+            var rows = await ordered.Take(MaxListRows).ToListAsync();
+            return Ok(rows.Select(item => item.ToResponse()));
+        }
+
+        // Category is a list column; match it case-insensitively in memory, then cap.
+        var wanted = category.Trim();
+        var all = await ordered.ToListAsync();
+        var matched = all
+            .Where(f => f.Category != null &&
+                        f.Category.Any(c => string.Equals(c, wanted, StringComparison.OrdinalIgnoreCase)))
+            .Take(MaxListRows);
+        return Ok(matched.Select(item => item.ToResponse()));
+    }
+
+    // GET: api/v1/fundingopportunities/categories
+    [HttpGet("categories")]
+    [AllowAnonymous]
+    public async Task<ActionResult<string[]>> GetCategories()
+    {
+        var lists = await _db.FundingOpportunities.AsNoTracking().Select(f => f.Category).ToListAsync();
+        return Ok(lists
+            .Where(l => l != null)
+            .SelectMany(l => l)
+            .Where(c => !string.IsNullOrWhiteSpace(c))
+            .Distinct()
+            .Order(StringComparer.OrdinalIgnoreCase)
+            .ToArray());
     }
 
     // GET: api/v1/fundingopportunities/{id}
-    [HttpGet("{id}")]
+    [HttpGet("{id:guid}")]
     [AllowAnonymous]
     public async Task<ActionResult<FundingOpportunityResponse>> GetById(Guid id)
     {
@@ -67,7 +111,7 @@ public class FundingOpportunitiesController : ControllerBase
     }
 
     // PUT: api/v1/fundingopportunities/{id}
-    [HttpPut("{id}")]
+    [HttpPut("{id:guid}")]
     [Authorize(Policy = "AdminOnly")]
     public async Task<IActionResult> Update(Guid id, FundingOpportunityRequest request)
     {
@@ -113,7 +157,7 @@ public class FundingOpportunitiesController : ControllerBase
     }
 
     // DELETE: api/v1/fundingopportunities/{id}
-    [HttpDelete("{id}")]
+    [HttpDelete("{id:guid}")]
     [Authorize(Policy = "AdminOnly")]
     public async Task<IActionResult> Delete(Guid id)
     {
