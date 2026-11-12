@@ -121,9 +121,11 @@ export async function authorizedFetch(
 import { getAccessToken, signOut } from "@/lib/auth";
 import { discoverQuery, type DiscoverFilters } from "@/lib/discover";
 
+export type SavedStatus = "Saved" | "Submitted";
+
 export type SavedOpportunity = {
   id: string;
-  status: "Saved" | "Applied" | "Submitted";
+  status: SavedStatus;
   attachedDocumentUrl?: string | null;
   savedAt: string;
   opportunity: FundingOpportunity;
@@ -149,6 +151,14 @@ export async function saveOpportunity(fundingOpportunityId: string): Promise<voi
     throw new Error("Create your user profile before saving opportunities.");
   }
   throw new Error("Could not save this opportunity. Please try again.");
+}
+
+export async function updateSavedStatus(id: string, status: SavedStatus): Promise<void> {
+  const response = await authorizedFetch(`/api/v1/savedopportunities/${id}`, {
+    method: "PUT",
+    body: JSON.stringify({ status }),
+  });
+  if (!response.ok) throw new Error(`Failed to update saved status (${response.status}).`);
 }
 
 export async function deleteSavedOpportunity(id: string): Promise<void> {

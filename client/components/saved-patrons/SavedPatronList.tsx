@@ -5,10 +5,13 @@ import { useEffect, useMemo, useState } from "react";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
+import { Select } from "@/components/ui/Select";
 import {
   deleteSavedOpportunity,
   getSavedOpportunities,
+  updateSavedStatus,
   type SavedOpportunity,
+  type SavedStatus,
 } from "@/lib/api";
 import {
   savedStatusFilters,
@@ -16,11 +19,17 @@ import {
 } from "@/lib/options";
 import { deadlineLabel, formatAmount, formatDate } from "@/lib/format";
 
+const statusOptions = [
+  { value: "Saved", label: "Saved" },
+  { value: "Submitted", label: "Submitted" },
+];
+
 export function SavedPatronList() {
   const [filter, setFilter] = useState<SavedStatusFilter>("All");
   const [savedItems, setSavedItems] = useState<SavedOpportunity[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [pendingIds, setPendingIds] = useState<Set<string>>(new Set());
 
   useEffect(() => {
     let active = true;
@@ -45,7 +54,36 @@ export function SavedPatronList() {
     return savedItems.filter((item) => item.status === filter);
   }, [savedItems, filter]);
 
-  async function handleRemove(id: string) {
+  async function handleStatusChange(item: SavedOpportunity, status: SavedStatus) {
+    const previous = item.status;
+    if (status === previous) return;
+    setError(null);
+    setPendingIds((prev) => new Set(prev).add(item.id));
+    setStatus(item.id, status);
+    try {
+      await updateSavedStatus(item.id, status);
+    } catch (err) {
+      console.error("Failed to update saved status", err);
+      setStatus(item.id, previous);
+      setError("Could not update the status. Please try again.");
+    } finally {
+      setPendingIds((prev) => {
+        const next = new Set(prev);
+        next.delete(item.id);
+        return next;
+      });
+    }
+  }
+
+  function setStatus(id: string, status: SavedStatus) {
+    setSavedItems((prev) =>
+      prev.map((entry) => (entry.id === id ? { ...entry, status } : entry)),
+    );
+  }
+
+  async function handleRemove(item: SavedOpportunity) {
+    const id = item.id;
+    if (!window.confirm(`Remove “${item.opportunity.title}” from your saved list?`)) return;
     setError(null);
     try {
       await deleteSavedOpportunity(id);
@@ -84,6 +122,10 @@ export function SavedPatronList() {
         <p className="text-center py-16 text-foreground/55">
           Loading saved patrons…
         </p>
+      ) : savedItems.length > 0 && filtered.length === 0 ? (
+        <p className="text-center py-16 text-foreground/55">
+          Nothing with this status.
+        </p>
       ) : filtered.length === 0 ? (
         <div className="text-center py-16">
           <p className="text-4xl mb-4">📁</p>
@@ -107,7 +149,6 @@ export function SavedPatronList() {
                     {item.opportunity.category?.map((category) => (
                       <Badge key={category}>{category}</Badge>
                     ))}
-                    <Badge variant="status">{item.status}</Badge>
                   </div>
                   <h3 className="text-lg font-bold text-foreground mb-1">
                     <Link
@@ -148,10 +189,19 @@ export function SavedPatronList() {
                       </Button>
                     </a>
                   )}
+                  <Select
+                    aria-label={`Status for ${item.opportunity.title}`}
+                    value={item.status}
+                    disabled={pendingIds.has(item.id)}
+                    onChange={(event) =>
+                      handleStatusChange(item, event.target.value as SavedStatus)
+                    }
+                    options={statusOptions}
+                  />
                   <Button
                     variant="ghost"
                     className="w-full sm:w-auto"
-                    onClick={() => handleRemove(item.id)}
+                    onClick={() => handleRemove(item)}
                   >
                     Remove
                   </Button>

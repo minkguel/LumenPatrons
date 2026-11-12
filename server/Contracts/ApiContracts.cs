@@ -30,8 +30,7 @@ public sealed record CreateSavedOpportunityRequest(
     [param: MaxLength(50)] string Status = "Saved");
 
 public sealed record UpdateSavedOpportunityRequest(
-    [param: Required, MaxLength(50)] string Status,
-    string? AttachedDocumentUrl);
+    [param: Required, MaxLength(50)] string Status);
 
 public record UserProfileResponse(
     Guid Id,

@@ -10,6 +10,7 @@ import {
   getFundingOpportunities,
   getFundingOpportunity,
   saveOpportunity,
+  updateSavedStatus,
 } from "@/lib/api";
 
 const fetchMock = vi.fn();
@@ -51,6 +52,25 @@ describe("saveOpportunity", () => {
     fetchMock.mockResolvedValueOnce(new Response("", { status: 500 }));
 
     await expect(saveOpportunity("opp-1")).rejects.toThrow("Could not save");
+  });
+});
+
+describe("updateSavedStatus", () => {
+  it("puts only the status", async () => {
+    fetchMock.mockResolvedValueOnce(new Response(null, { status: 204 }));
+
+    await updateSavedStatus("s-1", "Submitted");
+
+    const [url, init] = fetchMock.mock.calls[0];
+    expect(url).toContain("/api/v1/savedopportunities/s-1");
+    expect(init.method).toBe("PUT");
+    expect(init.body).toBe('{"status":"Submitted"}');
+  });
+
+  it("rejects when the request is not OK", async () => {
+    fetchMock.mockResolvedValueOnce(new Response("", { status: 400 }));
+
+    await expect(updateSavedStatus("s-1", "Saved")).rejects.toThrow("400");
   });
 });
 

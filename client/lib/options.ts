@@ -11,7 +11,6 @@ export const categoryOptions = [
 export const savedStatusFilters = [
   "All",
   "Saved",
-  "Applied",
   "Submitted",
 ] as const;
 

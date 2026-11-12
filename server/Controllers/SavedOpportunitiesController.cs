@@ -13,8 +13,11 @@ namespace LumenPatrons.Api.Controllers;
 [Route("api/v1/savedopportunities")]
 public class SavedOpportunitiesController : ControllerBase
 {
-    private static readonly HashSet<string> AllowedStatuses =
-        new(StringComparer.OrdinalIgnoreCase) { "Saved", "Applied", "Submitted" };
+    private static readonly string[] AllowedStatuses = { "Saved", "Submitted" };
+
+    private static string? CanonicalStatus(string status) =>
+        AllowedStatuses.FirstOrDefault(s => string.Equals(s, status, StringComparison.OrdinalIgnoreCase));
+
     private readonly AppDbContext _db;
 
     public SavedOpportunitiesController(AppDbContext db) => _db = db;
@@ -44,8 +47,9 @@ public class SavedOpportunitiesController : ControllerBase
     public async Task<ActionResult<SavedOpportunityResponse>> Create(CreateSavedOpportunityRequest request)
     {
         var userId = User.GetRequiredUserId();
-        if (!AllowedStatuses.Contains(request.Status))
-            return ValidationProblem("Status must be Saved, Applied, or Submitted.");
+        var status = CanonicalStatus(request.Status);
+        if (status is null)
+            return ValidationProblem("Status must be Saved or Submitted.");
         if (!await _db.UserProfiles.AnyAsync(user => user.Id == userId))
             return Conflict("Create your user profile before saving opportunities.");
 
@@ -58,7 +62,7 @@ public class SavedOpportunitiesController : ControllerBase
         var saved = new SavedOpportunity
         {
             Id = Guid.NewGuid(), UserId = userId, FundingOpportunityId = opportunity.Id,
-            Opportunity = opportunity, Status = request.Status, SavedAt = DateTime.UtcNow
+            Opportunity = opportunity, Status = status, SavedAt = DateTime.UtcNow
         };
         _db.SavedOpportunities.Add(saved);
         await _db.SaveChangesAsync();
@@ -69,13 +73,13 @@ public class SavedOpportunitiesController : ControllerBase
     public async Task<IActionResult> Update(Guid id, UpdateSavedOpportunityRequest request)
     {
         var userId = User.GetRequiredUserId();
-        if (!AllowedStatuses.Contains(request.Status))
-            return ValidationProblem("Status must be Saved, Applied, or Submitted.");
+        var status = CanonicalStatus(request.Status);
+        if (status is null)
+            return ValidationProblem("Status must be Saved or Submitted.");
         var saved = await _db.SavedOpportunities
             .FirstOrDefaultAsync(item => item.Id == id && item.UserId == userId);
         if (saved is null) return NotFound();
-        saved.Status = request.Status;
-        saved.AttachedDocumentUrl = request.AttachedDocumentUrl;
+        saved.Status = status;
         await _db.SaveChangesAsync();
         return NoContent();
     }
