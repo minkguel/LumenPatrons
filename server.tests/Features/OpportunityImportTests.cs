@@ -159,6 +159,21 @@ public sealed class OpportunityImportTests : IClassFixture<SecurityWebApplicatio
     }
 
     [Fact]
+    public async Task Null_element_is_skipped_and_reported()
+    {
+        var url = Url("null-element");
+        using var client = AdminClient();
+
+        var result = await ImportAsync(client, $$"""
+            [null, {"title":"Fine","patron_name":"P","external_url":"{{url}}"}]
+            """);
+
+        Assert.Equal(1, result.Created);
+        Assert.Equal(1, result.Skipped);
+        Assert.Contains(result.Errors, e => e.Index == 0 && e.Reason == "Missing title");
+    }
+
+    [Fact]
     public async Task Wrongly_shaped_single_fields_are_treated_as_blank()
     {
         var url = Url("shape");

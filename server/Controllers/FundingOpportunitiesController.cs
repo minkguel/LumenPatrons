@@ -85,7 +85,7 @@ public class FundingOpportunitiesController : ControllerBase
     [HttpPost("import")]
     [Authorize(Policy = "AdminOnly")]
     public async Task<ActionResult<ImportResult>> Import(
-        [FromBody] ImportOpportunityItem[] items,
+        [FromBody] ImportOpportunityItem?[] items,
         [FromServices] OpportunityImporter importer,
         CancellationToken ct)
     {

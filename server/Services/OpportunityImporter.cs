@@ -13,7 +13,7 @@ public class OpportunityImporter
 
     public OpportunityImporter(AppDbContext db) => _db = db;
 
-    public async Task<ImportResult> ImportAsync(IReadOnlyList<ImportOpportunityItem> items, CancellationToken ct)
+    public async Task<ImportResult> ImportAsync(IReadOnlyList<ImportOpportunityItem?> items, CancellationToken ct)
     {
         var errors = new List<ImportError>();
         // Later items win when the same link appears twice in one file.
@@ -22,6 +22,12 @@ public class OpportunityImporter
         for (var i = 0; i < items.Count; i++)
         {
             var item = items[i];
+            if (item is null)
+            {
+                errors.Add(new ImportError(i, "Missing title"));
+                continue;
+            }
+
             var title = Text(item.Title);
             if (title.Length == 0)
             {
