@@ -32,6 +32,17 @@ describe("saveOpportunity", () => {
     expect(JSON.parse(init.body)).toEqual({ fundingOpportunityId: "opp-1" });
   });
 
+  it("treats an already saved ProblemDetails 409 as saved", async () => {
+    fetchMock.mockResolvedValueOnce(
+      new Response(JSON.stringify({ status: 409, detail: "This funding opportunity is already saved." }), {
+        status: 409,
+        headers: { "Content-Type": "application/problem+json" },
+      }),
+    );
+
+    await expect(saveOpportunity("opp-1")).resolves.toBeUndefined();
+  });
+
   it("treats an already saved opportunity as saved", async () => {
     fetchMock.mockResolvedValueOnce(
       new Response("This funding opportunity is already saved.", { status: 409 }),

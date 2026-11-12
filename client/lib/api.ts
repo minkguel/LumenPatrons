@@ -137,6 +137,18 @@ export async function getSavedOpportunities(): Promise<SavedOpportunity[]> {
   return response.json();
 }
 
+// Error bodies are ProblemDetails JSON (use `detail`) or plain text.
+async function readErrorDetail(response: Response): Promise<string> {
+  const text = await response.text();
+  try {
+    const body = JSON.parse(text);
+    if (body && typeof body.detail === "string") return body.detail;
+  } catch {
+    // not JSON: fall through to the raw text
+  }
+  return text;
+}
+
 export async function saveOpportunity(fundingOpportunityId: string): Promise<void> {
   const response = await authorizedFetch("/api/v1/savedopportunities", {
     method: "POST",
@@ -146,7 +158,7 @@ export async function saveOpportunity(fundingOpportunityId: string): Promise<voi
 
   // The server uses 409 for both "already saved" and "no profile yet".
   if (response.status === 409) {
-    const message = await response.text();
+    const message = await readErrorDetail(response);
     if (message.includes("already saved")) return;
     throw new Error("Create your user profile before saving opportunities.");
   }
