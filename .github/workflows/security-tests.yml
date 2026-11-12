@@ -123,6 +123,10 @@ jobs:
           eval "$(supabase status -o env)"
           echo "NEXT_PUBLIC_SUPABASE_URL=${API_URL}" >> "$GITHUB_ENV"
           echo "NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=${PUBLISHABLE_KEY:-$ANON_KEY}" >> "$GITHUB_ENV"
+          # Local stack only: the e2e tests promote a user to admin and the API deletes accounts.
+          echo "::add-mask::${SERVICE_ROLE_KEY}"
+          echo "SUPABASE_SERVICE_ROLE_KEY=${SERVICE_ROLE_KEY}" >> "$GITHUB_ENV"
+          echo "Supabase__ServiceRoleKey=${SERVICE_ROLE_KEY}" >> "$GITHUB_ENV"
 
       - name: Set up .NET 10
         uses: actions/setup-dotnet@a98b56852c35b8e3190ac28c8c2271da59106c68 # v6

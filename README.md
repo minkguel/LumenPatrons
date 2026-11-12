@@ -191,6 +191,7 @@ npx supabase start
 eval "$(npx supabase status -o env)"
 export NEXT_PUBLIC_SUPABASE_URL="$API_URL"
 export NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY="${PUBLISHABLE_KEY:-$ANON_KEY}"
+export SUPABASE_SERVICE_ROLE_KEY="$SERVICE_ROLE_KEY"   # local stack's key only, never a hosted one
 export ConnectionStrings__SupabaseConnection="Host=127.0.0.1;Port=54322;Database=postgres;Username=postgres;Password=postgres"
 (cd server && dotnet ef database update)
 cd client && npm run e2e

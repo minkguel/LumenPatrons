@@ -5,6 +5,7 @@ import {
   DB_CONNECTION,
   EXPECT_TIMEOUT_MS,
   SUPABASE_PUBLISHABLE_KEY,
+  SUPABASE_SERVICE_ROLE_KEY,
   SUPABASE_URL,
 } from "./e2e/env";
 
@@ -55,6 +56,8 @@ export default defineConfig({
       env: {
         Supabase__Url: SUPABASE_URL,
         ConnectionStrings__SupabaseConnection: DB_CONNECTION,
+        // Local stack's service-role key; the API needs it to delete accounts.
+        Supabase__ServiceRoleKey: SUPABASE_SERVICE_ROLE_KEY,
       },
     },
   ],
