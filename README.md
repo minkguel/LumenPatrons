@@ -197,7 +197,6 @@ See the `e2e` job in `.github/workflows/security-tests.yml` for the exact CI ste
 ---
 
 ## Known issues & notes
-- Port mismatch: frontend client fallback API is `http://localhost:5083` while docker-compose maps server to host `5000`. Set `NEXT_PUBLIC_API_URL` to the actual backend URL.
 - `appsettings.Development.json` currently contains a connection string — treat that value as sensitive.
 - Apply the latest EF migration before using authenticated profile/saved-opportunity flows.
 - Enable Supabase Auth leaked-password protection before production.
@@ -206,10 +205,8 @@ See the `e2e` job in `.github/workflows/security-tests.yml` for the exact CI ste
 ---
 
 ## Recommended next steps (prioritized)
-1. Apply the `SecurityFoundation` migration and enable leaked-password protection in Supabase Auth.
-2. Wire Applications and Settings to the protected API endpoints.
-3. Create a small data ingestion pipeline to populate `FundingOpportunity` records.
-4. Add tests and basic CI; automate EF migrations in dev/CI.
+1. Enable leaked-password protection in Supabase Auth.
+2. Scrapers are run locally and are not part of the deployed product; data enters through Admin → Import.
 
 ---
 
@@ -219,7 +216,7 @@ See the `e2e` job in `.github/workflows/security-tests.yml` for the exact CI ste
   - Layout: `client/app/layout.tsx`
   - Home: `client/app/(app)/page.tsx`
   - Auth provider: `client/providers/AuthProvider.tsx`
-  - Mock auth: `client/lib/auth.ts`
+  - Auth helpers: `client/lib/auth.ts`
   - API client: `client/lib/api.ts`
   - UI components: `client/components/*`
 - Backend:
