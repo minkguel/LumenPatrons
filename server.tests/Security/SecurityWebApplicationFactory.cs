@@ -1,4 +1,5 @@
 using LumenPatrons.Api.Data;
+using LumenPatrons.Api.Services;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
@@ -11,6 +12,8 @@ namespace LumenPatrons.Api.Tests.Security;
 
 public sealed class SecurityWebApplicationFactory : WebApplicationFactory<Program>
 {
+    public FakeAuthIdentityDeleter AuthDeleter { get; } = new();
+
     private readonly string _databaseName = $"security-tests-{Guid.NewGuid()}";
 
     protected override void ConfigureWebHost(IWebHostBuilder builder)
@@ -23,6 +26,9 @@ public sealed class SecurityWebApplicationFactory : WebApplicationFactory<Progra
             services.RemoveAll<IDbContextOptionsConfiguration<AppDbContext>>();
             services.RemoveAll<AppDbContext>();
             services.AddDbContext<AppDbContext>(options => options.UseInMemoryDatabase(_databaseName));
+
+            services.RemoveAll<IAuthIdentityDeleter>();
+            services.AddSingleton<IAuthIdentityDeleter>(AuthDeleter);
 
             services.AddAuthentication(options =>
                 {
@@ -49,5 +55,18 @@ public sealed class SecurityWebApplicationFactory : WebApplicationFactory<Progra
         client.DefaultRequestHeaders.Add("X-Test-Email", $"{userId}@example.com");
         if (admin) client.DefaultRequestHeaders.Add("X-Test-Admin", "true");
         return client;
+    }
+}
+
+public sealed class FakeAuthIdentityDeleter : IAuthIdentityDeleter
+{
+    public bool Succeeds { get; set; } = true;
+    public List<Guid> Deleted { get; } = new();
+
+    public Task<bool> DeleteAsync(Guid userId, CancellationToken ct)
+    {
+        if (!Succeeds) return Task.FromResult(false);
+        Deleted.Add(userId);
+        return Task.FromResult(true);
     }
 }

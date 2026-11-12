@@ -3,7 +3,13 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 vi.mock("@/lib/api", () => ({ authorizedFetch: vi.fn() }));
 
 import { authorizedFetch } from "@/lib/api";
-import { ensureProfile, profileRequestBody, resetProfileStateForTests } from "@/lib/profile";
+import {
+  deleteMyAccount,
+  ensureProfile,
+  exportMyData,
+  profileRequestBody,
+  resetProfileStateForTests,
+} from "@/lib/profile";
 
 const fetchMock = vi.mocked(authorizedFetch);
 const res = (status: number) => ({ status, ok: status >= 200 && status < 300 }) as Response;
@@ -132,5 +138,32 @@ describe("profileRequestBody", () => {
 
   it("falls back to Founder", () => {
     expect(profileRequestBody(user()).userType).toBe("Founder");
+  });
+});
+
+describe("exportMyData", () => {
+  it("GETs the export endpoint and returns a Blob", async () => {
+    const blob = new Blob(["{}"], { type: "application/json" });
+    fetchMock.mockResolvedValueOnce({ status: 200, ok: true, blob: async () => blob } as unknown as Response);
+    await expect(exportMyData()).resolves.toBe(blob);
+    expect(fetchMock).toHaveBeenCalledWith("/api/v1/userprofiles/me/export");
+  });
+
+  it("rejects on a non-OK response", async () => {
+    fetchMock.mockResolvedValueOnce(res(404));
+    await expect(exportMyData()).rejects.toThrow();
+  });
+});
+
+describe("deleteMyAccount", () => {
+  it("sends DELETE to the profile endpoint", async () => {
+    fetchMock.mockResolvedValueOnce(res(204));
+    await expect(deleteMyAccount()).resolves.toBeUndefined();
+    expect(fetchMock).toHaveBeenCalledWith("/api/v1/userprofiles/me", { method: "DELETE" });
+  });
+
+  it.each([502, 500, 404])("rejects on %i", async (status) => {
+    fetchMock.mockResolvedValueOnce(res(status));
+    await expect(deleteMyAccount()).rejects.toThrow();
   });
 });

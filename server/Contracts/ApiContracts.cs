@@ -39,6 +39,11 @@ public record UserProfileResponse(
     string UserType,
     DateTime CreatedAt);
 
+public sealed record AccountExportResponse(
+    UserProfileResponse Profile,
+    IReadOnlyList<SavedOpportunityResponse> SavedOpportunities,
+    DateTime ExportedAt);
+
 public sealed record UpdateUserProfileRequest(
     [param: Required, MaxLength(100)] string FullName,
     [param: Required, MaxLength(50)] string UserType);

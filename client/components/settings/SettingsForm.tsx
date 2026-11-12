@@ -5,28 +5,15 @@ import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
 import { Input } from "@/components/ui/Input";
 import { Select } from "@/components/ui/Select";
+import { AccountDangerZone } from "@/components/settings/AccountDangerZone";
 import { ThemePicker } from "@/components/settings/ThemePicker";
-import { categoryOptions, userTypeOptions } from "@/lib/options";
+import { userTypeOptions } from "@/lib/options";
 import { getMyProfile, updateMyProfile } from "@/lib/profile";
 import { useAuth } from "@/providers/AuthProvider";
-
-type UserPreferences = {
-  deadlineReminders: boolean;
-  newPatronAlerts: boolean;
-  defaultCategory: string;
-};
 
 type SettingsProfile = {
   fullName: string;
   userType: string;
-  // Preferences are not stored by the API yet, so they only live in this form.
-  preferences: UserPreferences;
-};
-
-const defaultPreferences: UserPreferences = {
-  deadlineReminders: true,
-  newPatronAlerts: false,
-  defaultCategory: categoryOptions[0],
 };
 
 export function SettingsForm() {
@@ -34,12 +21,10 @@ export function SettingsForm() {
   const [profile, setProfile] = useState<SettingsProfile>({
     fullName: user?.fullName ?? "",
     userType: user?.userType ?? userTypeOptions[0],
-    preferences: defaultPreferences,
   });
   const [profileSaved, setProfileSaved] = useState(false);
   const [profileError, setProfileError] = useState<string | null>(null);
   const [isSaving, setIsSaving] = useState(false);
-  const [preferencesSaved, setPreferencesSaved] = useState(false);
 
   useEffect(() => {
     if (!user) return;
@@ -85,22 +70,6 @@ export function SettingsForm() {
     } finally {
       setIsSaving(false);
     }
-  }
-
-  function handlePreferencesSubmit(event: FormEvent) {
-    event.preventDefault();
-    setPreferencesSaved(true);
-    setTimeout(() => setPreferencesSaved(false), 3000);
-  }
-
-  function updatePreference<K extends keyof UserPreferences>(
-    key: K,
-    value: UserPreferences[K]
-  ) {
-    setProfile((prev) => ({
-      ...prev,
-      preferences: { ...prev.preferences, [key]: value },
-    }));
   }
 
   return (
@@ -158,68 +127,7 @@ export function SettingsForm() {
         <ThemePicker />
       </Card>
 
-      <Card>
-        <h3 className="text-lg font-bold text-foreground mb-6">Preferences</h3>
-
-        <form onSubmit={handlePreferencesSubmit} className="space-y-5">
-          <label className="flex items-center justify-between cursor-pointer">
-            <div>
-              <p className="text-sm font-medium text-foreground/80">
-                Deadline reminders
-              </p>
-              <p className="text-xs text-foreground/45">
-                Get notified before saved opportunity deadlines
-              </p>
-            </div>
-            <input
-              type="checkbox"
-              checked={profile.preferences.deadlineReminders}
-              onChange={(e) =>
-                updatePreference("deadlineReminders", e.target.checked)
-              }
-              className="w-4 h-4 accent-lumen-teal"
-            />
-          </label>
-
-          <label className="flex items-center justify-between cursor-pointer">
-            <div>
-              <p className="text-sm font-medium text-foreground/80">
-                New patron alerts
-              </p>
-              <p className="text-xs text-foreground/45">
-                Email when new funding opportunities match your profile
-              </p>
-            </div>
-            <input
-              type="checkbox"
-              checked={profile.preferences.newPatronAlerts}
-              onChange={(e) =>
-                updatePreference("newPatronAlerts", e.target.checked)
-              }
-              className="w-4 h-4 accent-lumen-teal"
-            />
-          </label>
-
-          <Select
-            label="Default category filter"
-            value={profile.preferences.defaultCategory}
-            onChange={(e) =>
-              updatePreference("defaultCategory", e.target.value)
-            }
-            options={categoryOptions.map((cat) => ({
-              value: cat,
-              label: cat,
-            }))}
-          />
-
-          {preferencesSaved && (
-            <p className="text-sm text-success bg-success-soft px-3 py-2 rounded-lg">
-              Preferences saved successfully!
-            </p>
-          )}
-          <Button type="submit">Save Preferences</Button>
-        </form>
-      </Card>
+      <AccountDangerZone />
     </div>
   );
 }

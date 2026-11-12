@@ -68,6 +68,8 @@ builder.Services.AddAuthorization(options =>
 });
 
 builder.Services.AddScoped<LumenPatrons.Api.Services.OpportunityImporter>();
+builder.Services.AddHttpClient<LumenPatrons.Api.Services.IAuthIdentityDeleter, LumenPatrons.Api.Services.SupabaseAuthAdmin>(
+    client => client.Timeout = TimeSpan.FromSeconds(10));
 
 builder.Services.AddControllers();
 

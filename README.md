@@ -137,6 +137,7 @@ Example environment variables (recommended)
   - `ConnectionStrings__SupabaseConnection` env var or update `server/appsettings.Development.json`:
     - `ConnectionStrings__SupabaseConnection="Host=...;Port=5432;Database=...;Username=...;Password=...;"`
   - `Supabase__Url` — same Supabase project URL, used for JWT issuer/JWKS validation
+  - `Supabase__ServiceRoleKey` — server-only secret that lets the API delete a user's login when they delete their account (Settings > Your data). Never expose it to the browser, never prefix it with `NEXT_PUBLIC_`, never commit it. If unset, account deletion answers 502 and removes nothing.
 
 Security note: do not commit production secrets to the repository. Use environment variables, a secrets store, or a local `.env` (gitignored).
 
