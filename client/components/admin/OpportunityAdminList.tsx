@@ -20,7 +20,7 @@ export function OpportunityAdminList({ refreshKey }: OpportunityAdminListProps) 
 
   useEffect(() => {
     let active = true;
-    getFundingOpportunities()
+    getFundingOpportunities({ includeClosed: true })
       .then((data) => {
         if (!active) return;
         setItems(data);

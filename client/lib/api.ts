@@ -49,15 +49,34 @@ export type ImportResult = {
   errors: { index: number; reason: string }[];
 };
 
+export type FundingOpportunityFilters = DiscoverFilters & {
+  /** Include closed/expired opportunities (the list hides them by default). */
+  includeClosed?: boolean;
+};
+
 export async function getFundingOpportunities(
-  filters: DiscoverFilters = {},
+  filters: FundingOpportunityFilters = {},
 ): Promise<FundingOpportunity[]> {
+  const params = new URLSearchParams(discoverQuery(filters));
+  if (filters.includeClosed) params.set("includeClosed", "true");
+  const query = params.toString();
   const response = await fetch(
-    `${API_BASE}/api/v1/fundingopportunities${discoverQuery(filters)}`,
+    `${API_BASE}/api/v1/fundingopportunities${query ? `?${query}` : ""}`,
     { cache: "no-store" },
   );
   if (!response.ok) throw new Error(`Failed to load funding opportunities (${response.status}).`);
   return (await response.json()) as FundingOpportunity[];
+}
+
+/** Returns the opportunity, or null when it does not exist (404). */
+export async function getFundingOpportunity(id: string): Promise<FundingOpportunity | null> {
+  const response = await fetch(
+    `${API_BASE}/api/v1/fundingopportunities/${encodeURIComponent(id)}`,
+    { cache: "no-store" },
+  );
+  if (response.status === 404) return null;
+  if (!response.ok) throw new Error(`Failed to load funding opportunity (${response.status}).`);
+  return (await response.json()) as FundingOpportunity;
 }
 
 export async function getCategories(): Promise<string[]> {

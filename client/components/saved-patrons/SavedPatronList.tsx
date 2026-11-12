@@ -110,7 +110,12 @@ export function SavedPatronList() {
                     <Badge variant="status">{item.status}</Badge>
                   </div>
                   <h3 className="text-lg font-bold text-foreground mb-1">
-                    {item.opportunity.title}
+                    <Link
+                      href={`/opportunities/${item.opportunity.id}`}
+                      className="hover:text-lumen-teal hover:underline"
+                    >
+                      {item.opportunity.title}
+                    </Link>
                   </h3>
                   <p className="text-sm text-foreground/55 mb-3">
                     {item.opportunity.patronName}

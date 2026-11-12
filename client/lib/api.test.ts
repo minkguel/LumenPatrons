@@ -5,7 +5,12 @@ vi.mock("@/lib/auth", () => ({
   signOut: vi.fn(),
 }));
 
-import { getCategories, getFundingOpportunities, saveOpportunity } from "@/lib/api";
+import {
+  getCategories,
+  getFundingOpportunities,
+  getFundingOpportunity,
+  saveOpportunity,
+} from "@/lib/api";
 
 const fetchMock = vi.fn();
 
@@ -68,6 +73,39 @@ describe("getFundingOpportunities", () => {
     fetchMock.mockResolvedValueOnce(new Response("", { status: 500 }));
 
     await expect(getFundingOpportunities()).rejects.toThrow("500");
+  });
+});
+
+describe("getFundingOpportunities includeClosed", () => {
+  it("sends includeClosed=true only when asked", async () => {
+    fetchMock.mockImplementation(async () => new Response("[]", { status: 200 }));
+
+    await getFundingOpportunities({ includeClosed: true });
+    await getFundingOpportunities({ q: "bio", includeClosed: false });
+
+    expect(fetchMock.mock.calls[0][0]).toMatch(/\/api\/v1\/fundingopportunities\?includeClosed=true$/);
+    expect(fetchMock.mock.calls[1][0]).toMatch(/\/api\/v1\/fundingopportunities\?q=bio$/);
+  });
+});
+
+describe("getFundingOpportunity", () => {
+  it("returns the opportunity on 200", async () => {
+    fetchMock.mockResolvedValueOnce(new Response('{"id":"a","title":"T","patronName":"P"}', { status: 200 }));
+
+    await expect(getFundingOpportunity("a")).resolves.toMatchObject({ id: "a", title: "T" });
+    expect(fetchMock.mock.calls[0][0]).toContain("/api/v1/fundingopportunities/a");
+  });
+
+  it("returns null on 404", async () => {
+    fetchMock.mockResolvedValueOnce(new Response("", { status: 404 }));
+
+    await expect(getFundingOpportunity("a")).resolves.toBeNull();
+  });
+
+  it("rejects on other errors", async () => {
+    fetchMock.mockResolvedValueOnce(new Response("", { status: 500 }));
+
+    await expect(getFundingOpportunity("a")).rejects.toThrow("500");
   });
 });
 
