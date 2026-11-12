@@ -9,30 +9,7 @@ import {
   getSavedOpportunities,
   type FundingOpportunity,
 } from "@/lib/api";
-
-function formatAmount(amount?: number | null) {
-  if (!amount && amount !== 0) return "—";
-  try {
-    return new Intl.NumberFormat("en-IE", {
-      style: "currency",
-      currency: "EUR",
-      maximumFractionDigits: 0,
-    }).format(Number(amount));
-  } catch {
-    return `€${amount}`;
-  }
-}
-
-function daysUntil(iso?: string) {
-  if (!iso) return "No deadline";
-  const d = new Date(iso);
-  const now = new Date();
-  const diff = Math.ceil((d.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
-  if (isNaN(diff)) return "No deadline";
-  if (diff <= 0) return "Closed";
-  if (diff === 1) return "Closes in 1 day";
-  return `Closes in ${diff} days`;
-}
+import { deadlineLabel, formatAmount } from "@/lib/format";
 
 export default function Home() {
   const [patrons, setPatrons] = useState<FundingOpportunity[] | null>(null);
@@ -105,10 +82,10 @@ export default function Home() {
                 </p>
                 <div className="flex justify-between items-center text-sm border-t border-lumen-teal/10 pt-4">
                   <span className="text-patron-gold font-semibold">
-                    {formatAmount(patron.estimatedAmount)}
+                    {formatAmount(patron.estimatedAmount, patron.currency)}
                   </span>
                   <span className="text-foreground/40">
-                    {daysUntil(patron.deadline)}
+                    {deadlineLabel(patron.deadline, patron.status)}
                   </span>
                 </div>
                 <SaveButton opportunityId={patron.id} alreadySaved={savedIds.has(patron.id)} />

@@ -14,31 +14,7 @@ import {
   savedStatusFilters,
   type SavedStatusFilter,
 } from "@/lib/options";
-
-function formatAmount(amount: number) {
-  return new Intl.NumberFormat("en-EU", {
-    style: "currency",
-    currency: "EUR",
-    maximumFractionDigits: 0,
-  }).format(amount);
-}
-
-function formatDate(dateStr: string) {
-  return new Date(dateStr).toLocaleDateString("en-GB", {
-    day: "numeric",
-    month: "short",
-    year: "numeric",
-  });
-}
-
-function daysUntil(deadline: string) {
-  const diff = new Date(deadline).getTime() - Date.now();
-  const days = Math.ceil(diff / (1000 * 60 * 60 * 24));
-  if (days < 0) return "Closed";
-  if (days === 0) return "Closes today";
-  if (days === 1) return "Closes in 1 day";
-  return `Closes in ${days} days`;
-}
+import { deadlineLabel, formatAmount, formatDate } from "@/lib/format";
 
 export function SavedPatronList() {
   const [filter, setFilter] = useState<SavedStatusFilter>("All");
@@ -142,12 +118,12 @@ export function SavedPatronList() {
                   <div className="flex flex-wrap gap-4 text-sm">
                     {item.opportunity.estimatedAmount != null && (
                       <span className="text-patron-gold font-semibold">
-                        {formatAmount(item.opportunity.estimatedAmount)}
+                        {formatAmount(item.opportunity.estimatedAmount, item.opportunity.currency)}
                       </span>
                     )}
                     {item.opportunity.deadline && (
                       <span className="text-foreground/45">
-                        {daysUntil(item.opportunity.deadline)}
+                        {deadlineLabel(item.opportunity.deadline, item.opportunity.status)}
                       </span>
                     )}
                     <span className="text-foreground/45">
