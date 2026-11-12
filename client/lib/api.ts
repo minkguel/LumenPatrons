@@ -42,6 +42,13 @@ export type FundingOpportunity = {
   createdAt?: string;
 };
 
+export type ImportResult = {
+  created: number;
+  updated: number;
+  skipped: number;
+  errors: { index: number; reason: string }[];
+};
+
 export async function getFundingOpportunities(): Promise<FundingOpportunity[]> {
   try {
     const response = await fetch(`${API_BASE}/api/v1/fundingopportunities`);
@@ -123,5 +130,30 @@ export async function deleteSavedOpportunity(id: string): Promise<void> {
   const response = await authorizedFetch(`/api/v1/savedopportunities/${id}`, { method: "DELETE" });
   if (!response.ok && response.status !== 404) {
     throw new Error(`Failed to remove saved opportunity (${response.status}).`);
+  }
+}
+
+export async function importOpportunities(items: unknown[]): Promise<ImportResult> {
+  const response = await authorizedFetch("/api/v1/fundingopportunities/import", {
+    method: "POST",
+    body: JSON.stringify(items),
+  });
+  if (!response.ok) {
+    let detail: string | undefined;
+    try {
+      const problem = await response.json();
+      if (typeof problem?.detail === "string" && problem.detail) detail = problem.detail;
+    } catch {
+      // body was not JSON; fall back to the generic message
+    }
+    throw new Error(detail ?? "Import failed. Please try again.");
+  }
+  return response.json();
+}
+
+export async function deleteOpportunity(id: string): Promise<void> {
+  const response = await authorizedFetch(`/api/v1/fundingopportunities/${id}`, { method: "DELETE" });
+  if (!response.ok && response.status !== 404) {
+    throw new Error(`Failed to delete opportunity (${response.status}).`);
   }
 }

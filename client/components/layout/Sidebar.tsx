@@ -1,5 +1,6 @@
 import type { SystemStatus } from "@/lib/api";
 import { Logo } from "@/components/ui/Logo";
+import { AdminNavLink } from "./AdminNavLink";
 import { NavLink } from "./NavLink";
 import { StatusWidget } from "./StatusWidget";
 
@@ -25,6 +26,7 @@ export function Sidebar({ systemStatus }: SidebarProps) {
           <NavLink href="/settings" icon="⚙️">
             Settings
           </NavLink>
+          <AdminNavLink />
         </nav>
       </div>
 

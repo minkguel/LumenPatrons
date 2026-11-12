@@ -158,6 +158,14 @@ Configure the hosted Supabase project (Dashboard) once:
 
 `supabase/config.toml` mirrors these settings for the local Supabase CLI test stack.
 
+### Making an admin
+
+Admins can import and delete funding opportunities from the **Admin** page. Run this once in the Supabase SQL editor, then sign out and back in:
+
+```sql
+update auth.users set raw_app_meta_data = raw_app_meta_data || '{"role":"admin"}' where email = '<your email>';
+```
+
 ## Security tests
 
 The API security integration tests use an isolated in-memory database and a test-only authentication handler. They never connect to Supabase and require no secrets, which makes them suitable for GitHub Actions.
