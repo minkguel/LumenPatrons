@@ -1,8 +1,10 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useRef, useState } from "react";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
+import { Suspense, useEffect, useRef, useState } from "react";
 import { Button } from "@/components/ui/Button";
+import { discoverQuery } from "@/lib/discover";
 import { useAuth } from "@/providers/AuthProvider";
 
 function getInitials(name: string) {
@@ -12,6 +14,48 @@ function getInitials(name: string) {
     .join("")
     .slice(0, 2)
     .toUpperCase();
+}
+
+function SearchForm() {
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
+  const onDiscover = pathname === "/";
+  const urlQuery = onDiscover ? (searchParams.get("q") ?? "") : "";
+  const category = onDiscover ? (searchParams.get("category") ?? "") : "";
+  // The key resets the box when the URL changes (e.g. "Clear search").
+  return <SearchBox key={urlQuery} initialText={urlQuery} category={category} />;
+}
+
+function SearchBox({ initialText, category }: { initialText: string; category: string }) {
+  const router = useRouter();
+  const [text, setText] = useState(initialText);
+
+  function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    router.push(`/${discoverQuery({ q: text, category })}`);
+  }
+
+  return (
+    <form
+      role="search"
+      aria-label="Search funding opportunities"
+      onSubmit={handleSubmit}
+      className="relative w-96"
+    >
+      <input
+        type="search"
+        value={text}
+        onChange={(event) => setText(event.target.value)}
+        maxLength={100}
+        aria-label="Search"
+        placeholder="Search for biotech, seed funds, stipends..."
+        className="w-full bg-bg-cream border border-lumen-teal/25 rounded-lg pl-10 pr-4 py-2 text-sm focus:outline-none focus:border-lumen-teal focus:ring-1 focus:ring-lumen-teal/40 transition-all text-foreground placeholder-foreground/35"
+      />
+      <span aria-hidden className="absolute left-3 top-2.5 text-foreground/40 text-sm">
+        🔎
+      </span>
+    </form>
+  );
 }
 
 export function Topbar() {
@@ -36,16 +80,9 @@ export function Topbar() {
 
   return (
     <header className="h-16 border-b border-lumen-teal/15 bg-surface flex items-center justify-between px-8 shadow-sm shrink-0">
-      <div className="relative w-96">
-        <input
-          type="text"
-          placeholder="Search for biotech, seed funds, stipends..."
-          className="w-full bg-bg-cream border border-lumen-teal/25 rounded-lg pl-10 pr-4 py-2 text-sm focus:outline-none focus:border-lumen-teal focus:ring-1 focus:ring-lumen-teal/40 transition-all text-foreground placeholder-foreground/35"
-        />
-        <span className="absolute left-3 top-2.5 text-foreground/40 text-sm">
-          🔎
-        </span>
-      </div>
+      <Suspense fallback={<div className="w-96" />}>
+        <SearchForm />
+      </Suspense>
 
       {user ? (
         <div className="relative" ref={menuRef}>

@@ -1,20 +1,34 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { Badge } from "@/components/ui/Badge";
-import { Card } from "@/components/ui/Card";
-import { SaveButton } from "@/components/discover/SaveButton";
+import { Suspense, useEffect, useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
+import { Button } from "@/components/ui/Button";
+import { DiscoverFilters } from "@/components/discover/DiscoverFilters";
+import { OpportunityCard } from "@/components/discover/OpportunityCard";
 import {
+  getCategories,
   getFundingOpportunities,
   getSavedOpportunities,
   type FundingOpportunity,
 } from "@/lib/api";
-import { deadlineLabel, formatAmount } from "@/lib/format";
+import { discoverQuery } from "@/lib/discover";
 
-export default function Home() {
-  const [patrons, setPatrons] = useState<FundingOpportunity[] | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+function Discover() {
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const q = searchParams.get("q") ?? "";
+  const category = searchParams.get("category") ?? "";
+
+  const [retryKey, setRetryKey] = useState(0);
+  const requestKey = `${q}
+${category}
+${retryKey}`;
+  // The result remembers which request it answers, so "loading" is derived, not set in an effect.
+  const [result, setResult] = useState<{
+    key: string;
+    data: FundingOpportunity[] | null;
+  } | null>(null);
+  const [categories, setCategories] = useState<string[]>([]);
   const [savedIds, setSavedIds] = useState<Set<string>>(new Set());
 
   useEffect(() => {
@@ -28,26 +42,38 @@ export default function Home() {
         // Discover still works without this; cards just start as unsaved.
         console.error(err);
       });
-
-    getFundingOpportunities()
-      .then((data) => {
-        if (!mounted) return;
-        setPatrons(data);
+    getCategories()
+      .then((names) => {
+        if (mounted) setCategories(names);
       })
       .catch((err) => {
+        // Discover still works without this; there are just no category buttons.
         console.error(err);
-        if (!mounted) return;
-        setError("Failed to load funding opportunities");
-      })
-      .finally(() => {
-        if (!mounted) return;
-        setLoading(false);
       });
-
     return () => {
       mounted = false;
     };
   }, []);
+
+  useEffect(() => {
+    let mounted = true;
+    getFundingOpportunities({ q, category })
+      .then((data) => {
+        if (mounted) setResult({ key: requestKey, data });
+      })
+      .catch((err) => {
+        console.error(err);
+        if (mounted) setResult({ key: requestKey, data: null });
+      });
+    return () => {
+      mounted = false;
+    };
+  }, [q, category, requestKey]);
+
+  const loading = result?.key !== requestKey;
+  const patrons = result?.data ?? null;
+  const error = !loading && result?.data === null;
+  const hasFilter = q !== "" || category !== "";
 
   return (
     <div className="p-8">
@@ -60,44 +86,50 @@ export default function Home() {
           Find non-dilutive capital and institutional backing without the noise.
         </p>
 
+        <DiscoverFilters
+          categories={categories}
+          selected={category || undefined}
+          onSelect={(next) => router.push(`/${discoverQuery({ q, category: next })}`)}
+        />
+
         {loading ? (
           <div className="text-center text-foreground/55">Loading...</div>
         ) : error ? (
-          <div className="text-center text-danger">{error}</div>
+          <div className="text-center text-danger space-y-3">
+            <p>Could not load funding opportunities.</p>
+            <Button variant="secondary" onClick={() => setRetryKey((k) => k + 1)}>
+              Try again
+            </Button>
+          </div>
         ) : patrons && patrons.length > 0 ? (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {patrons.map((patron) => (
-              <Card key={patron.id} hover>
-                <div className="flex justify-between items-start mb-4">
-                  <Badge>{patron.category?.length ? patron.category.join(", ") : "General"}</Badge>
-                  <span className="text-foreground/40 text-sm group-hover:text-patron-gold transition-colors">
-                    Grant
-                  </span>
-                </div>
-                <h3 className="text-lg font-bold text-foreground mb-1">
-                  {patron.title}
-                </h3>
-                <p className="text-sm text-foreground/55 mb-4 line-clamp-2">
-                  {patron.patronName}
-                </p>
-                <div className="flex justify-between items-center text-sm border-t border-lumen-teal/10 pt-4">
-                  <span className="text-patron-gold font-semibold">
-                    {formatAmount(patron.estimatedAmount, patron.currency)}
-                  </span>
-                  <span className="text-foreground/40">
-                    {deadlineLabel(patron.deadline, patron.status)}
-                  </span>
-                </div>
-                <SaveButton opportunityId={patron.id} alreadySaved={savedIds.has(patron.id)} />
-              </Card>
+              <OpportunityCard
+                key={patron.id}
+                opportunity={patron}
+                alreadySaved={savedIds.has(patron.id)}
+              />
             ))}
           </div>
-        ) : (
-          <div className="text-center text-foreground/55">
-            No funding opportunities found.
+        ) : hasFilter ? (
+          <div className="text-center text-foreground/55 space-y-3">
+            <p>Nothing matches your search.</p>
+            <Button variant="secondary" onClick={() => router.push("/")}>
+              Clear search
+            </Button>
           </div>
+        ) : (
+          <div className="text-center text-foreground/55">No funding opportunities yet.</div>
         )}
       </div>
     </div>
+  );
+}
+
+export default function Home() {
+  return (
+    <Suspense fallback={<div className="p-8 text-center text-foreground/55">Loading...</div>}>
+      <Discover />
+    </Suspense>
   );
 }

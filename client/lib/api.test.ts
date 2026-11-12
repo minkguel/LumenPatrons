@@ -5,7 +5,7 @@ vi.mock("@/lib/auth", () => ({
   signOut: vi.fn(),
 }));
 
-import { saveOpportunity } from "@/lib/api";
+import { getCategories, getFundingOpportunities, saveOpportunity } from "@/lib/api";
 
 const fetchMock = vi.fn();
 
@@ -46,5 +46,41 @@ describe("saveOpportunity", () => {
     fetchMock.mockResolvedValueOnce(new Response("", { status: 500 }));
 
     await expect(saveOpportunity("opp-1")).rejects.toThrow("Could not save");
+  });
+});
+
+describe("getFundingOpportunities", () => {
+  it("passes the filters in the query string", async () => {
+    fetchMock.mockResolvedValueOnce(new Response("[]", { status: 200 }));
+
+    await getFundingOpportunities({ q: "bio", category: "Health" });
+
+    expect(fetchMock.mock.calls[0][0]).toContain("/api/v1/fundingopportunities?q=bio&category=Health");
+  });
+
+  it("rejects when the request fails", async () => {
+    fetchMock.mockRejectedValueOnce(new TypeError("network down"));
+
+    await expect(getFundingOpportunities()).rejects.toThrow();
+  });
+
+  it("rejects on an HTTP error", async () => {
+    fetchMock.mockResolvedValueOnce(new Response("", { status: 500 }));
+
+    await expect(getFundingOpportunities()).rejects.toThrow("500");
+  });
+});
+
+describe("getCategories", () => {
+  it("returns the category list", async () => {
+    fetchMock.mockResolvedValueOnce(new Response('["Health","Arts"]', { status: 200 }));
+
+    await expect(getCategories()).resolves.toEqual(["Health", "Arts"]);
+  });
+
+  it("rejects on an HTTP error", async () => {
+    fetchMock.mockResolvedValueOnce(new Response("", { status: 500 }));
+
+    await expect(getCategories()).rejects.toThrow("500");
   });
 });

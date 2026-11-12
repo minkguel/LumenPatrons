@@ -49,16 +49,21 @@ export type ImportResult = {
   errors: { index: number; reason: string }[];
 };
 
-export async function getFundingOpportunities(): Promise<FundingOpportunity[]> {
-  try {
-    const response = await fetch(`${API_BASE}/api/v1/fundingopportunities`);
-    if (!response.ok) return [];
-    const data = await response.json();
-    return data as FundingOpportunity[];
-  } catch (e) {
-    console.error("Failed to fetch funding opportunities", e);
-    return [];
-  }
+export async function getFundingOpportunities(
+  filters: DiscoverFilters = {},
+): Promise<FundingOpportunity[]> {
+  const response = await fetch(
+    `${API_BASE}/api/v1/fundingopportunities${discoverQuery(filters)}`,
+    { cache: "no-store" },
+  );
+  if (!response.ok) throw new Error(`Failed to load funding opportunities (${response.status}).`);
+  return (await response.json()) as FundingOpportunity[];
+}
+
+export async function getCategories(): Promise<string[]> {
+  const response = await fetch(`${API_BASE}/api/v1/fundingopportunities/categories`);
+  if (!response.ok) throw new Error(`Failed to load categories (${response.status}).`);
+  return (await response.json()) as string[];
 }
 
 export type AuthorizedFetchOptions = {
@@ -95,6 +100,7 @@ export async function authorizedFetch(
   return response;
 }
 import { getAccessToken, signOut } from "@/lib/auth";
+import { discoverQuery, type DiscoverFilters } from "@/lib/discover";
 
 export type SavedOpportunity = {
   id: string;

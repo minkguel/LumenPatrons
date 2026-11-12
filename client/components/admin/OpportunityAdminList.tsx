@@ -14,16 +14,27 @@ export function OpportunityAdminList({ refreshKey }: OpportunityAdminListProps) 
   const [items, setItems] = useState<FundingOpportunity[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [loadFailed, setLoadFailed] = useState(false);
 
   const [reloadKey, setReloadKey] = useState(0);
 
   useEffect(() => {
     let active = true;
-    getFundingOpportunities().then((data) => {
-      if (!active) return;
-      setItems(data);
-      setIsLoading(false);
-    });
+    getFundingOpportunities()
+      .then((data) => {
+        if (!active) return;
+        setItems(data);
+        setLoadFailed(false);
+      })
+      .catch((e) => {
+        console.error(e);
+        if (!active) return;
+        setLoadFailed(true);
+      })
+      .finally(() => {
+        if (!active) return;
+        setIsLoading(false);
+      });
     return () => {
       active = false;
     };
@@ -49,7 +60,15 @@ export function OpportunityAdminList({ refreshKey }: OpportunityAdminListProps) 
           {error}
         </p>
       )}
-      {items.length === 0 && <p className="text-foreground/55">No opportunities yet.</p>}
+      {loadFailed && (
+        <p role="alert" className="text-sm text-danger bg-danger-soft rounded-lg px-3 py-2">
+          Could not load opportunities.{" "}
+          <button className="underline" onClick={() => setReloadKey((k) => k + 1)}>
+            Try again
+          </button>
+        </p>
+      )}
+      {!loadFailed && items.length === 0 && <p className="text-foreground/55">No opportunities yet.</p>}
       {items.map((item) => (
         <Card key={item.id} className="flex items-center justify-between gap-4">
           <div className="min-w-0">
