@@ -17,23 +17,32 @@ function getInitials(name: string) {
     .toUpperCase();
 }
 
-function SearchForm() {
+function SearchForm({ onSearched }: { onSearched: () => void }) {
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const onDiscover = pathname === "/";
   const urlQuery = onDiscover ? (searchParams.get("q") ?? "") : "";
   const category = onDiscover ? (searchParams.get("category") ?? "") : "";
   // The key resets the box when the URL changes (e.g. "Clear search").
-  return <SearchBox key={urlQuery} initialText={urlQuery} category={category} />;
+  return <SearchBox key={urlQuery} initialText={urlQuery} category={category} onSearched={onSearched} />;
 }
 
-function SearchBox({ initialText, category }: { initialText: string; category: string }) {
+function SearchBox({
+  initialText,
+  category,
+  onSearched,
+}: {
+  initialText: string;
+  category: string;
+  onSearched: () => void;
+}) {
   const router = useRouter();
   const [text, setText] = useState(initialText);
 
   function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
     router.push(`/${discoverQuery({ q: text, category })}`);
+    onSearched();
   }
 
   return (
@@ -67,6 +76,9 @@ export function Topbar() {
   // Remember which page the mobile menu was opened on: it counts as open only
   // while we are still on that page, so any route change closes it.
   const [mobileOpenedAt, setMobileOpenedAt] = useState<string | null>(null);
+  // Forget a stale "opened at" path as soon as the route changes, so going
+  // back to that path later does not reopen the menu.
+  if (mobileOpenedAt !== null && mobileOpenedAt !== pathname) setMobileOpenedAt(null);
   const mobileOpen = mobileOpenedAt === pathname;
   const mobileButtonRef = useRef<HTMLButtonElement>(null);
 
@@ -120,7 +132,7 @@ export function Topbar() {
         <span aria-hidden>{mobileOpen ? "✕" : "☰"}</span>
       </button>
       <Suspense fallback={<div className="w-full max-w-96" />}>
-        <SearchForm />
+        <SearchForm onSearched={() => setMobileOpenedAt(null)} />
       </Suspense>
 
       {user ? (
@@ -174,7 +186,10 @@ export function Topbar() {
           aria-label="Main"
           onClick={(event) => {
             // Also close when the link points at the page we are already on.
-            if ((event.target as HTMLElement).closest("a")) setMobileOpenedAt(null);
+            if ((event.target as HTMLElement).closest("a")) {
+              setMobileOpenedAt(null);
+              mobileButtonRef.current?.focus();
+            }
           }}
           className="md:hidden absolute inset-x-0 top-full z-20 bg-bg-cream border-b border-lumen-teal/15 shadow-md p-4 space-y-1.5"
         >
