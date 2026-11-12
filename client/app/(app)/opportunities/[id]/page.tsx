@@ -70,12 +70,12 @@ ${retryKey}`;
   const loading = result?.key !== requestKey;
 
   if (loading) {
-    return <div className="p-8 text-center text-foreground/55">Loading...</div>;
+    return <div className="p-4 md:p-8 text-center text-foreground/55">Loading...</div>;
   }
 
   if (result.failed) {
     return (
-      <div className="p-8 text-center text-danger space-y-3">
+      <div className="p-4 md:p-8 text-center text-danger space-y-3">
         <p>Could not load this opportunity.</p>
         <Button variant="secondary" onClick={() => setRetryKey((k) => k + 1)}>
           Try again
@@ -87,7 +87,7 @@ ${retryKey}`;
   const opportunity = result.data;
   if (!opportunity) {
     return (
-      <div className="p-8 text-center text-foreground/55 space-y-3">
+      <div className="p-4 md:p-8 text-center text-foreground/55 space-y-3">
         <p>This opportunity no longer exists.</p>
         <BackLink />
       </div>
@@ -102,7 +102,7 @@ ${retryKey}`;
       : null;
 
   return (
-    <div className="p-8">
+    <div className="p-4 md:p-8">
       <div className="max-w-3xl mx-auto space-y-6">
         <BackLink />
         <Card>
@@ -157,7 +157,7 @@ ${retryKey}`;
 
 export default function OpportunityPage() {
   return (
-    <Suspense fallback={<div className="p-8 text-center text-foreground/55">Loading...</div>}>
+    <Suspense fallback={<div className="p-4 md:p-8 text-center text-foreground/55">Loading...</div>}>
       <OpportunityDetail />
     </Suspense>
   );

@@ -76,7 +76,7 @@ ${retryKey}`;
   const hasFilter = q !== "" || category !== "";
 
   return (
-    <div className="p-8">
+    <div className="p-4 md:p-8">
       <div className="max-w-5xl mx-auto">
         <h2 className="text-3xl font-bold text-foreground mb-2">
           Welcome to <span className="text-lumen-teal">Lumen</span>
@@ -128,7 +128,7 @@ ${retryKey}`;
 
 export default function Home() {
   return (
-    <Suspense fallback={<div className="p-8 text-center text-foreground/55">Loading...</div>}>
+    <Suspense fallback={<div className="p-4 md:p-8 text-center text-foreground/55">Loading...</div>}>
       <Discover />
     </Suspense>
   );

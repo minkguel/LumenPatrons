@@ -16,7 +16,7 @@ export function NavLink({ href, icon, children }: NavLinkProps) {
   return (
     <Link
       href={href}
-      className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-colors font-medium ${
+      className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-colors font-medium focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lumen-teal ${
         isActive
           ? "bg-lumen-teal text-on-primary shadow-sm"
           : "text-foreground/60 hover:text-lumen-teal hover:bg-lumen-teal-light"

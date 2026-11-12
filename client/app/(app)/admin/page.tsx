@@ -9,18 +9,18 @@ export default function AdminPage() {
   const { user, isLoading } = useAuth();
   const [refreshKey, setRefreshKey] = useState(0);
 
-  if (isLoading) return <div className="p-8 text-foreground/55">Loading...</div>;
+  if (isLoading) return <div className="p-4 md:p-8 text-foreground/55">Loading...</div>;
 
   if (!user?.isAdmin) {
     return (
-      <div className="p-8">
+      <div className="p-4 md:p-8">
         <p className="text-foreground/55">You don&apos;t have access to this page.</p>
       </div>
     );
   }
 
   return (
-    <div className="p-8">
+    <div className="p-4 md:p-8">
       <div className="max-w-4xl mx-auto space-y-8">
         <div>
           <h2 className="text-3xl font-bold text-foreground mb-2">Admin</h2>
