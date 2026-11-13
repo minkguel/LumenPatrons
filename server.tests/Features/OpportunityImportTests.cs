@@ -139,14 +139,14 @@ public sealed class OpportunityImportTests : IClassFixture<SecurityWebApplicatio
     }
 
     [Theory]
-    [InlineData("\"500.000\"", 500000)]
-    [InlineData("\"1.250.000\"", 1250000)]
-    [InlineData("\"500,000\"", 500000)]
-    [InlineData("\"500 000\"", 500000)]
-    [InlineData("\"1500.50\"", 1500.5)]
+    [InlineData("\"500.000\"", "500000")]
+    [InlineData("\"1.250.000\"", "1250000")]
+    [InlineData("\"500,000\"", "500000")]
+    [InlineData("\"500 000\"", "500000")]
+    [InlineData("\"1500.50\"", "1500.5")]
     [InlineData("-5", null)]
     [InlineData("\"-5\"", null)]
-    public async Task Amount_formats_are_read_correctly(string json, double? expected)
+    public async Task Amount_formats_are_read_correctly(string json, string? expected)
     {
         var url = Url("amount-format");
         using var client = AdminClient();
@@ -156,7 +156,7 @@ public sealed class OpportunityImportTests : IClassFixture<SecurityWebApplicatio
             """);
 
         var row = await QueryAsync(db => db.FundingOpportunities.SingleAsync(f => f.ExternalUrl == url));
-        Assert.Equal(expected is null ? null : (decimal)expected, row.EstimatedAmount);
+        Assert.Equal(expected is null ? null : decimal.Parse(expected, System.Globalization.CultureInfo.InvariantCulture), row.EstimatedAmount);
     }
 
     [Theory]
