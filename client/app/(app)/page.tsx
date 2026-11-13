@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/Button";
 import { DiscoverFilters } from "@/components/discover/DiscoverFilters";
 import { OpportunityCard } from "@/components/discover/OpportunityCard";
 import {
+  MAX_LIST_ROWS,
   getCategories,
   getFundingOpportunities,
   getSavedOpportunities,
@@ -102,14 +103,21 @@ ${retryKey}`;
             </Button>
           </div>
         ) : patrons && patrons.length > 0 ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {patrons.map((patron) => (
-              <OpportunityCard
-                key={patron.id}
-                opportunity={patron}
-                alreadySaved={savedIds.has(patron.id)}
-              />
-            ))}
+          <div className="space-y-4">
+            {patrons.length === MAX_LIST_ROWS && (
+              <p className="text-sm text-foreground/55">
+                Showing the first {MAX_LIST_ROWS}. Search to narrow down.
+              </p>
+            )}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {patrons.map((patron) => (
+                <OpportunityCard
+                  key={patron.id}
+                  opportunity={patron}
+                  alreadySaved={savedIds.has(patron.id)}
+                />
+              ))}
+            </div>
           </div>
         ) : hasFilter ? (
           <div className="text-center text-foreground/55 space-y-3">

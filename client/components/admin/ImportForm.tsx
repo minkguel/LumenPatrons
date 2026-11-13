@@ -25,14 +25,13 @@ export function ImportForm({ onImported }: ImportFormProps) {
     setError(null);
     setResult(null);
 
-    const parsed = parseImportFile(await file.text());
-    if ("error" in parsed) {
-      setError(parsed.error);
-      return;
-    }
-
     setIsUploading(true);
     try {
+      const parsed = parseImportFile(await file.text());
+      if ("error" in parsed) {
+        setError(parsed.error);
+        return;
+      }
       setResult(await importOpportunities(parsed.items));
       onImported();
     } catch (e) {

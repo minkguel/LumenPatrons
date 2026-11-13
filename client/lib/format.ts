@@ -24,10 +24,10 @@ export function deadlineLabel(
   status?: string,
   now: Date = new Date(),
 ): string {
+  if (status?.toLowerCase() === "closed") return "Closed";
   if (!deadlineIso) return "No deadline";
   const deadline = new Date(deadlineIso).getTime();
   if (Number.isNaN(deadline)) return "No deadline";
-  if (status?.toLowerCase() === "closed") return "Closed";
   const diff = deadline - now.getTime();
   if (diff < 0) return "Closed";
   if (diff < DAY_MS) return "Closes today";

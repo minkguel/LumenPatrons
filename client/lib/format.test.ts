@@ -38,6 +38,11 @@ describe("deadlineLabel", () => {
     expect(deadlineLabel("2026-12-01T00:00:00Z", "Closed", now)).toBe("Closed");
   });
 
+  it("reports a closed opportunity without a deadline as closed", () => {
+    expect(deadlineLabel(undefined, "Closed", now)).toBe("Closed");
+    expect(deadlineLabel(null, "closed", now)).toBe("Closed");
+  });
+
   it("counts down to the deadline", () => {
     expect(deadlineLabel("2026-11-12T20:00:00Z", "Open", now)).toBe("Closes today");
     expect(deadlineLabel("2026-11-13T12:00:00Z", "Open", now)).toBe("Closes in 1 day");

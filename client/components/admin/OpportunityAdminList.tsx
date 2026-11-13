@@ -3,7 +3,13 @@
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
-import { deleteOpportunity, getFundingOpportunities, type FundingOpportunity } from "@/lib/api";
+import { Input } from "@/components/ui/Input";
+import {
+  MAX_LIST_ROWS,
+  deleteOpportunity,
+  getFundingOpportunities,
+  type FundingOpportunity,
+} from "@/lib/api";
 
 type OpportunityAdminListProps = {
   /** Changing this value reloads the list (used after an import). */
@@ -17,10 +23,12 @@ export function OpportunityAdminList({ refreshKey }: OpportunityAdminListProps) 
   const [loadFailed, setLoadFailed] = useState(false);
 
   const [reloadKey, setReloadKey] = useState(0);
+  const [filterText, setFilterText] = useState("");
+  const [appliedFilter, setAppliedFilter] = useState("");
 
   useEffect(() => {
     let active = true;
-    getFundingOpportunities({ includeClosed: true })
+    getFundingOpportunities({ q: appliedFilter, includeClosed: true })
       .then((data) => {
         if (!active) return;
         setItems(data);
@@ -38,7 +46,7 @@ export function OpportunityAdminList({ refreshKey }: OpportunityAdminListProps) 
     return () => {
       active = false;
     };
-  }, [refreshKey, reloadKey]);
+  }, [refreshKey, reloadKey, appliedFilter]);
 
   async function handleDelete(item: FundingOpportunity) {
     if (!window.confirm(`Delete “${item.title}”? Users who saved it will lose it.`)) return;
@@ -51,10 +59,27 @@ export function OpportunityAdminList({ refreshKey }: OpportunityAdminListProps) 
     }
   }
 
-  if (isLoading) return <p className="text-foreground/55">Loading...</p>;
+  function handleFilter(event: React.FormEvent) {
+    event.preventDefault();
+    setAppliedFilter(filterText.trim());
+  }
 
   return (
     <div className="space-y-3">
+      <form onSubmit={handleFilter} className="flex items-end gap-2">
+        <div className="flex-1">
+          <Input
+            label="Filter opportunities"
+            value={filterText}
+            onChange={(e) => setFilterText(e.target.value)}
+            maxLength={100}
+          />
+        </div>
+        <Button type="submit" variant="secondary">
+          Filter
+        </Button>
+      </form>
+      {isLoading && <p className="text-foreground/55">Loading...</p>}
       {error && (
         <p role="alert" className="text-sm text-danger bg-danger-soft rounded-lg px-3 py-2">
           {error}
@@ -68,7 +93,10 @@ export function OpportunityAdminList({ refreshKey }: OpportunityAdminListProps) 
           </button>
         </p>
       )}
-      {!loadFailed && items.length === 0 && <p className="text-foreground/55">No opportunities yet.</p>}
+      {!isLoading && items.length === MAX_LIST_ROWS && (
+        <p className="text-sm text-foreground/55">Showing the first {MAX_LIST_ROWS}. Use the filter to find others.</p>
+      )}
+      {!isLoading && !loadFailed && items.length === 0 && <p className="text-foreground/55">No opportunities yet.</p>}
       {items.map((item) => (
         <Card key={item.id} className="flex items-center justify-between gap-4">
           <div className="min-w-0">

@@ -18,7 +18,8 @@ function saveBlob(blob: Blob, filename: string) {
   document.body.appendChild(link);
   link.click();
   link.remove();
-  URL.revokeObjectURL(url);
+  // Give the browser a moment to start the download before the URL goes away.
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
 }
 
 export function AccountDangerZone() {

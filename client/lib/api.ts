@@ -49,6 +49,9 @@ export type ImportResult = {
   errors: { index: number; reason: string }[];
 };
 
+/** The server returns at most this many opportunities per list request. */
+export const MAX_LIST_ROWS = 1000;
+
 export type FundingOpportunityFilters = DiscoverFilters & {
   /** Include closed/expired opportunities (the list hides them by default). */
   includeClosed?: boolean;
