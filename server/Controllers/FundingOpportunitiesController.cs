@@ -14,7 +14,7 @@ namespace LumenPatrons.Api.Controllers;
 public class FundingOpportunitiesController : ControllerBase
 {
     private const int MaxImportItems = 500;
-    private const int MaxListRows = 200;
+    private const int MaxListRows = 1000;
     private readonly AppDbContext _db;
 
     public FundingOpportunitiesController(AppDbContext db)
@@ -151,7 +151,13 @@ public class FundingOpportunitiesController : ControllerBase
         target.Eligibility = request.Eligibility;
         target.EstimatedAmount = request.EstimatedAmount;
         target.Currency = request.Currency;
-        target.Deadline = request.Deadline;
+        // Npgsql rejects Unspecified for timestamptz, so every stored deadline is UTC.
+        target.Deadline = request.Deadline switch
+        {
+            { Kind: DateTimeKind.Unspecified } d => DateTime.SpecifyKind(d, DateTimeKind.Utc),
+            { Kind: DateTimeKind.Local } d => d.ToUniversalTime(),
+            var d => d
+        };
         target.Status = string.IsNullOrWhiteSpace(request.Status) ? "Open" : request.Status;
         target.ExternalUrl = request.ExternalUrl ?? string.Empty;
     }

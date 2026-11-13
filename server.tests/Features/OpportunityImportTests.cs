@@ -138,6 +138,83 @@ public sealed class OpportunityImportTests : IClassFixture<SecurityWebApplicatio
         Assert.Null(b.Currency);
     }
 
+    [Theory]
+    [InlineData("\"500.000\"", 500000)]
+    [InlineData("\"1.250.000\"", 1250000)]
+    [InlineData("\"500,000\"", 500000)]
+    [InlineData("\"500 000\"", 500000)]
+    [InlineData("\"1500.50\"", 1500.5)]
+    [InlineData("-5", null)]
+    [InlineData("\"-5\"", null)]
+    public async Task Amount_formats_are_read_correctly(string json, double? expected)
+    {
+        var url = Url("amount-format");
+        using var client = AdminClient();
+
+        await ImportAsync(client, $$"""
+            [{"title":"A","patron_name":"P","external_url":"{{url}}","estimated_amount":{{json}}}]
+            """);
+
+        var row = await QueryAsync(db => db.FundingOpportunities.SingleAsync(f => f.ExternalUrl == url));
+        Assert.Equal(expected is null ? null : (decimal)expected, row.EstimatedAmount);
+    }
+
+    [Theory]
+    [InlineData("2026-12-31", "2026-12-31T22:59:59Z")]
+    [InlineData("2026-06-30", "2026-06-30T21:59:59Z")]
+    [InlineData("2026-12-31T10:00:00Z", "2026-12-31T10:00:00Z")]
+    [InlineData("2026-12-31T10:00:00+02:00", "2026-12-31T08:00:00Z")]
+    [InlineData("2026-12-31T10:00:00", "2026-12-31T10:00:00Z")]
+    public async Task Iso_deadlines_are_stored_as_utc(string input, string expectedUtc)
+    {
+        var url = Url("deadline-iso");
+        using var client = AdminClient();
+
+        await ImportAsync(client, $$"""
+            [{"title":"A","patron_name":"P","external_url":"{{url}}","deadline":"{{input}}"}]
+            """);
+
+        var row = await QueryAsync(db => db.FundingOpportunities.SingleAsync(f => f.ExternalUrl == url));
+        var expected = DateTimeOffset.Parse(expectedUtc, System.Globalization.CultureInfo.InvariantCulture).UtcDateTime;
+        Assert.Equal(expected, row.Deadline);
+        Assert.Equal(DateTimeKind.Utc, row.Deadline!.Value.Kind);
+    }
+
+    [Theory]
+    [InlineData("01/12/2026")]
+    [InlineData("01.12.2026")]
+    [InlineData("31 December 2026")]
+    public async Task Non_iso_deadlines_become_null_but_item_is_imported(string input)
+    {
+        var url = Url("deadline-bad");
+        using var client = AdminClient();
+
+        var result = await ImportAsync(client, $$"""
+            [{"title":"A","patron_name":"P","external_url":"{{url}}","deadline":"{{input}}"}]
+            """);
+
+        Assert.Equal(1, result.Created);
+        var row = await QueryAsync(db => db.FundingOpportunities.SingleAsync(f => f.ExternalUrl == url));
+        Assert.Null(row.Deadline);
+    }
+
+    [Theory]
+    [InlineData("javascript:alert(1)", HttpStatusCode.BadRequest)]
+    [InlineData("example.com/grant", HttpStatusCode.BadRequest)]
+    [InlineData("ftp://example.com/x", HttpStatusCode.BadRequest)]
+    [InlineData("https://example.com/grant", HttpStatusCode.Created)]
+    [InlineData("", HttpStatusCode.Created)]
+    public async Task Admin_create_only_accepts_http_links(string link, HttpStatusCode expected)
+    {
+        using var client = AdminClient();
+        var body = JsonSerializer.Serialize(new { title = "T", patronName = "P", externalUrl = link });
+
+        var response = await client.PostAsync("/api/v1/fundingopportunities",
+            new StringContent(body, Encoding.UTF8, "application/json"), TestContext.Current.CancellationToken);
+
+        Assert.Equal(expected, response.StatusCode);
+    }
+
     [Fact]
     public async Task Bad_items_are_skipped_and_reported()
     {

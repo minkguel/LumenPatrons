@@ -48,11 +48,11 @@ public sealed class SecurityWebApplicationFactory : WebApplicationFactory<Progra
         await db.SaveChangesAsync();
     }
 
-    public HttpClient CreateAuthenticatedClient(Guid userId, bool admin = false)
+    public HttpClient CreateAuthenticatedClient(Guid userId, bool admin = false, string? email = null)
     {
         var client = CreateClient(new WebApplicationFactoryClientOptions { AllowAutoRedirect = false });
         client.DefaultRequestHeaders.Add("X-Test-User", userId.ToString());
-        client.DefaultRequestHeaders.Add("X-Test-Email", $"{userId}@example.com");
+        client.DefaultRequestHeaders.Add("X-Test-Email", email ?? $"{userId}@example.com");
         if (admin) client.DefaultRequestHeaders.Add("X-Test-Admin", "true");
         return client;
     }

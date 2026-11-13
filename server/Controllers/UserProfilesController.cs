@@ -17,10 +17,14 @@ public class UserProfilesController : ControllerBase
     private readonly AppDbContext _db;
     private readonly IAuthIdentityDeleter _authDeleter;
 
-    public UserProfilesController(AppDbContext db, IAuthIdentityDeleter authDeleter)
+    private readonly ILogger<UserProfilesController> _logger;
+
+    public UserProfilesController(
+        AppDbContext db, IAuthIdentityDeleter authDeleter, ILogger<UserProfilesController> logger)
     {
         _db = db;
         _authDeleter = authDeleter;
+        _logger = logger;
     }
 
     [HttpGet("me")]
@@ -40,6 +44,22 @@ public class UserProfilesController : ControllerBase
         var profile = await _db.UserProfiles.FirstOrDefaultAsync(user => user.Id == userId);
         if (profile is null)
         {
+            // Email is unique. Supabase verified this email for the signed-in user, so a profile
+            // with the same email and another Id belongs to a login that no longer exists.
+            var stale = await _db.UserProfiles
+                .Where(user => user.Email == email && user.Id != userId)
+                .ToListAsync();
+            if (stale.Count > 0)
+            {
+                var staleIds = stale.Select(user => user.Id).ToList();
+                var staleSaved = await _db.SavedOpportunities
+                    .Where(item => staleIds.Contains(item.UserId))
+                    .ToListAsync();
+                _db.SavedOpportunities.RemoveRange(staleSaved);
+                _db.UserProfiles.RemoveRange(stale);
+                await _db.SaveChangesAsync();
+            }
+
             profile = new UserProfile { Id = userId, Email = email, FullName = request.FullName,
                 UserType = request.UserType, CreatedAt = DateTime.UtcNow };
             _db.UserProfiles.Add(profile);
@@ -78,9 +98,6 @@ public class UserProfilesController : ControllerBase
     public async Task<IActionResult> DeleteMe(CancellationToken ct)
     {
         var userId = User.GetRequiredUserId();
-        var profile = await _db.UserProfiles.FirstOrDefaultAsync(user => user.Id == userId, ct);
-        if (profile is null) return NotFound();
-
         // Remove the login first: if that fails nothing else is touched, so the user can retry.
         if (!await _authDeleter.DeleteAsync(userId, ct))
         {
@@ -89,10 +106,20 @@ public class UserProfilesController : ControllerBase
                 statusCode: StatusCodes.Status502BadGateway);
         }
 
-        var saved = await _db.SavedOpportunities.Where(item => item.UserId == userId).ToListAsync(ct);
-        _db.SavedOpportunities.RemoveRange(saved);
-        _db.UserProfiles.Remove(profile);
-        await _db.SaveChangesAsync(ct);
+        try
+        {
+            // A login can exist without a profile row; remove whatever is there.
+            var saved = await _db.SavedOpportunities.Where(item => item.UserId == userId).ToListAsync(ct);
+            _db.SavedOpportunities.RemoveRange(saved);
+            var profile = await _db.UserProfiles.FirstOrDefaultAsync(user => user.Id == userId, ct);
+            if (profile is not null) _db.UserProfiles.Remove(profile);
+            await _db.SaveChangesAsync(ct);
+        }
+        catch (Exception e)
+        {
+            _logger.LogError(e, "Login {UserId} was deleted but removing its database rows failed", userId);
+            throw;
+        }
         return NoContent();
     }
 }

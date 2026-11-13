@@ -88,6 +88,44 @@ public sealed class AccountTests : IClassFixture<SecurityWebApplicationFactory>
     }
 
     [Fact]
+    public async Task Delete_without_profile_row_still_deletes_the_login()
+    {
+        var userId = Guid.NewGuid();
+        using var client = _factory.CreateAuthenticatedClient(userId);
+
+        var response = await client.DeleteAsync(
+            "/api/v1/userprofiles/me", TestContext.Current.CancellationToken);
+
+        Assert.Equal(HttpStatusCode.NoContent, response.StatusCode);
+        Assert.Contains(userId, _factory.AuthDeleter.Deleted);
+    }
+
+    [Fact]
+    public async Task Signup_with_email_of_a_deleted_account_replaces_the_stale_profile()
+    {
+        var staleId = await SeedUserWithSavedAsync("Stale");
+        var email = $"{staleId}@example.com";
+        var newId = Guid.NewGuid();
+        using var client = _factory.CreateAuthenticatedClient(newId, email: email);
+
+        var response = await client.PutAsJsonAsync("/api/v1/userprofiles/me",
+            new { fullName = "New Person", userType = "Founder" }, TestContext.Current.CancellationToken);
+
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        var withEmail = 0;
+        Guid remaining = Guid.Empty;
+        await _factory.SeedAsync(async db =>
+        {
+            var rows = await db.UserProfiles.Where(u => u.Email == email).ToListAsync();
+            withEmail = rows.Count;
+            remaining = rows.Single().Id;
+        });
+        Assert.Equal(1, withEmail);
+        Assert.Equal(newId, remaining);
+        Assert.Equal(0, await SavedCountAsync(staleId));
+    }
+
+    [Fact]
     public async Task Delete_leaves_other_users_data_untouched()
     {
         var mine = await SeedUserWithSavedAsync("Mine");

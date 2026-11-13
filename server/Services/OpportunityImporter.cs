@@ -1,5 +1,6 @@
 using System.Globalization;
 using System.Text.Json;
+using System.Text.RegularExpressions;
 using LumenPatrons.Api.Contracts;
 using LumenPatrons.Api.Data;
 using LumenPatrons.Api.Models;
@@ -144,6 +145,11 @@ public class OpportunityImporter
         return new List<string>();
     }
 
+    private static readonly Regex DotThousands = new(@"^\d{1,3}(\.\d{3})+$", RegexOptions.Compiled);
+    private static readonly Regex CommaThousands = new(@"^\d{1,3}(,\d{3})+$", RegexOptions.Compiled);
+    private static readonly Regex SpaceThousands = new(@"^\d{1,3}([  ]\d{3})+$", RegexOptions.Compiled);
+    private static readonly Regex IsoDateTime = new(@"^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}", RegexOptions.Compiled);
+
     private static decimal? Amount(JsonElement? value)
     {
         decimal parsed;
@@ -151,14 +157,21 @@ public class OpportunityImporter
         {
             case { ValueKind: JsonValueKind.Number } n when n.TryGetDecimal(out parsed):
                 break;
-            case { ValueKind: JsonValueKind.String } s
-                when decimal.TryParse(s.GetString()?.Trim(), NumberStyles.Number, CultureInfo.InvariantCulture, out parsed):
+            case { ValueKind: JsonValueKind.String } s when TryParseAmountText(s.GetString()?.Trim() ?? "", out parsed):
                 break;
             default:
                 return null;
         }
-        // Column is decimal(18,2).
-        return Math.Abs(parsed) >= 10_000_000_000_000_000m ? null : parsed;
+        // Column is decimal(18,2); a negative amount makes no sense.
+        return parsed < 0 || parsed >= 10_000_000_000_000_000m ? null : parsed;
+    }
+
+    private static bool TryParseAmountText(string text, out decimal parsed)
+    {
+        if (DotThousands.IsMatch(text)) text = text.Replace(".", "");
+        else if (CommaThousands.IsMatch(text)) text = text.Replace(",", "");
+        else if (SpaceThousands.IsMatch(text)) text = text.Replace(" ", "").Replace(" ", "");
+        return decimal.TryParse(text, NumberStyles.Number, CultureInfo.InvariantCulture, out parsed);
     }
 
     private static string? Currency(JsonElement? value)
@@ -171,10 +184,31 @@ public class OpportunityImporter
     {
         var text = Text(value);
         if (text.Length == 0) return null;
-        return DateTime.TryParse(text, CultureInfo.InvariantCulture,
-            DateTimeStyles.AssumeUniversal | DateTimeStyles.AdjustToUniversal, out var parsed)
-            ? parsed
-            : null;
+
+        // A date with no time: the deadline runs to the end of that day in Danish time.
+        if (DateOnly.TryParseExact(text, "yyyy-MM-dd", CultureInfo.InvariantCulture, DateTimeStyles.None, out var day))
+            return EndOfDayUtc(day);
+
+        // Otherwise only an ISO 8601 date-time; no offset means UTC.
+        if (IsoDateTime.IsMatch(text)
+            && DateTimeOffset.TryParse(text, CultureInfo.InvariantCulture, DateTimeStyles.AssumeUniversal, out var instant))
+            return instant.UtcDateTime;
+
+        return null;
+    }
+
+    private static DateTime EndOfDayUtc(DateOnly day)
+    {
+        var local = day.ToDateTime(new TimeOnly(23, 59, 59), DateTimeKind.Unspecified);
+        try
+        {
+            var zone = TimeZoneInfo.FindSystemTimeZoneById("Europe/Copenhagen");
+            return TimeZoneInfo.ConvertTimeToUtc(local, zone);
+        }
+        catch (Exception e) when (e is TimeZoneNotFoundException or InvalidTimeZoneException)
+        {
+            return DateTime.SpecifyKind(local, DateTimeKind.Utc);
+        }
     }
 
     private sealed record Normalised(

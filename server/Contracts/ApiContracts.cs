@@ -58,7 +58,20 @@ public sealed record FundingOpportunityRequest(
     [param: MaxLength(3)] string? Currency,
     DateTime? Deadline,
     [param: MaxLength(20)] string? Status,
-    string? ExternalUrl);
+    [param: AbsoluteHttpUrl] string? ExternalUrl);
+
+/// <summary>Empty is allowed; anything else must be an absolute http or https URL.</summary>
+[AttributeUsage(AttributeTargets.Property | AttributeTargets.Parameter | AttributeTargets.Field)]
+public sealed class AbsoluteHttpUrlAttribute : ValidationAttribute
+{
+    public AbsoluteHttpUrlAttribute() : base("The link must be an absolute http or https URL.") { }
+
+    public override bool IsValid(object? value) =>
+        value is not string text
+        || text.Length == 0
+        || (Uri.TryCreate(text, UriKind.Absolute, out var uri)
+            && (uri.Scheme == Uri.UriSchemeHttp || uri.Scheme == Uri.UriSchemeHttps));
+}
 
 // One scraper row. Single fields are raw JSON values so a wrongly-shaped field
 // (e.g. a number where text is expected) becomes blank instead of failing the upload.
