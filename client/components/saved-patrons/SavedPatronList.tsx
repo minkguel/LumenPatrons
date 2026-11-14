@@ -5,46 +5,31 @@ import { useEffect, useMemo, useState } from "react";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
+import { Select } from "@/components/ui/Select";
 import {
   deleteSavedOpportunity,
   getSavedOpportunities,
+  updateSavedStatus,
   type SavedOpportunity,
+  type SavedStatus,
 } from "@/lib/api";
 import {
   savedStatusFilters,
   type SavedStatusFilter,
 } from "@/lib/options";
+import { deadlineLabel, formatAmount, formatDate } from "@/lib/format";
 
-function formatAmount(amount: number) {
-  return new Intl.NumberFormat("en-EU", {
-    style: "currency",
-    currency: "EUR",
-    maximumFractionDigits: 0,
-  }).format(amount);
-}
-
-function formatDate(dateStr: string) {
-  return new Date(dateStr).toLocaleDateString("en-GB", {
-    day: "numeric",
-    month: "short",
-    year: "numeric",
-  });
-}
-
-function daysUntil(deadline: string) {
-  const diff = new Date(deadline).getTime() - Date.now();
-  const days = Math.ceil(diff / (1000 * 60 * 60 * 24));
-  if (days < 0) return "Closed";
-  if (days === 0) return "Closes today";
-  if (days === 1) return "Closes in 1 day";
-  return `Closes in ${days} days`;
-}
+const statusOptions = [
+  { value: "Saved", label: "Saved" },
+  { value: "Submitted", label: "Submitted" },
+];
 
 export function SavedPatronList() {
   const [filter, setFilter] = useState<SavedStatusFilter>("All");
   const [savedItems, setSavedItems] = useState<SavedOpportunity[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [pendingIds, setPendingIds] = useState<Set<string>>(new Set());
 
   useEffect(() => {
     let active = true;
@@ -69,7 +54,36 @@ export function SavedPatronList() {
     return savedItems.filter((item) => item.status === filter);
   }, [savedItems, filter]);
 
-  async function handleRemove(id: string) {
+  async function handleStatusChange(item: SavedOpportunity, status: SavedStatus) {
+    const previous = item.status;
+    if (status === previous) return;
+    setError(null);
+    setPendingIds((prev) => new Set(prev).add(item.id));
+    setStatus(item.id, status);
+    try {
+      await updateSavedStatus(item.id, status);
+    } catch (err) {
+      console.error("Failed to update saved status", err);
+      setStatus(item.id, previous);
+      setError("Could not update the status. Please try again.");
+    } finally {
+      setPendingIds((prev) => {
+        const next = new Set(prev);
+        next.delete(item.id);
+        return next;
+      });
+    }
+  }
+
+  function setStatus(id: string, status: SavedStatus) {
+    setSavedItems((prev) =>
+      prev.map((entry) => (entry.id === id ? { ...entry, status } : entry)),
+    );
+  }
+
+  async function handleRemove(item: SavedOpportunity) {
+    const id = item.id;
+    if (!window.confirm(`Remove “${item.opportunity.title}” from your saved list?`)) return;
     setError(null);
     try {
       await deleteSavedOpportunity(id);
@@ -89,8 +103,8 @@ export function SavedPatronList() {
             onClick={() => setFilter(status)}
             className={`px-3 py-1.5 text-sm font-medium rounded-lg transition-colors ${
               filter === status
-                ? "bg-lumen-teal text-white"
-                : "bg-white border border-lumen-teal/20 text-foreground/60 hover:text-lumen-teal hover:border-lumen-teal/40"
+                ? "bg-lumen-teal text-on-primary"
+                : "bg-surface border border-lumen-teal/20 text-foreground/60 hover:text-lumen-teal hover:border-lumen-teal/40"
             }`}
           >
             {status}
@@ -99,7 +113,7 @@ export function SavedPatronList() {
       </div>
 
       {error && (
-        <p className="text-sm text-red-600 bg-red-50 px-3 py-2 rounded-lg mb-4">
+        <p className="text-sm text-danger bg-danger-soft px-3 py-2 rounded-lg mb-4">
           {error}
         </p>
       )}
@@ -107,6 +121,10 @@ export function SavedPatronList() {
       {isLoading ? (
         <p className="text-center py-16 text-foreground/55">
           Loading saved patrons…
+        </p>
+      ) : savedItems.length > 0 && filtered.length === 0 ? (
+        <p className="text-center py-16 text-foreground/55">
+          Nothing with this status.
         </p>
       ) : filtered.length === 0 ? (
         <div className="text-center py-16">
@@ -131,23 +149,27 @@ export function SavedPatronList() {
                     {item.opportunity.category?.map((category) => (
                       <Badge key={category}>{category}</Badge>
                     ))}
-                    <Badge variant="status">{item.status}</Badge>
                   </div>
                   <h3 className="text-lg font-bold text-foreground mb-1">
-                    {item.opportunity.title}
+                    <Link
+                      href={`/opportunities/${item.opportunity.id}`}
+                      className="hover:text-lumen-teal hover:underline"
+                    >
+                      {item.opportunity.title}
+                    </Link>
                   </h3>
                   <p className="text-sm text-foreground/55 mb-3">
                     {item.opportunity.patronName}
                   </p>
                   <div className="flex flex-wrap gap-4 text-sm">
-                    {item.opportunity.minimumAmount != null && (
+                    {item.opportunity.estimatedAmount != null && (
                       <span className="text-patron-gold font-semibold">
-                        {formatAmount(item.opportunity.minimumAmount)}
+                        {formatAmount(item.opportunity.estimatedAmount, item.opportunity.currency)}
                       </span>
                     )}
                     {item.opportunity.deadline && (
                       <span className="text-foreground/45">
-                        {daysUntil(item.opportunity.deadline)}
+                        {deadlineLabel(item.opportunity.deadline, item.opportunity.status)}
                       </span>
                     )}
                     <span className="text-foreground/45">
@@ -167,10 +189,19 @@ export function SavedPatronList() {
                       </Button>
                     </a>
                   )}
+                  <Select
+                    aria-label={`Status for ${item.opportunity.title}`}
+                    value={item.status}
+                    disabled={pendingIds.has(item.id)}
+                    onChange={(event) =>
+                      handleStatusChange(item, event.target.value as SavedStatus)
+                    }
+                    options={statusOptions}
+                  />
                   <Button
                     variant="ghost"
                     className="w-full sm:w-auto"
-                    onClick={() => handleRemove(item.id)}
+                    onClick={() => handleRemove(item)}
                   >
                     Remove
                   </Button>

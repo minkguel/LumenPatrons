@@ -8,7 +8,7 @@ export function CheckEmail() {
   const email = useSearchParams().get("email") ?? "";
 
   return (
-    <div className="w-full max-w-md bg-white border border-lumen-teal/15 rounded-xl p-6 shadow-sm space-y-4 text-center">
+    <div className="w-full max-w-md bg-surface border border-lumen-teal/15 rounded-xl p-6 shadow-sm space-y-4 text-center">
       <h1 className="text-xl font-semibold text-foreground">Check your inbox</h1>
       {email && (
         <p className="text-sm text-foreground/65">

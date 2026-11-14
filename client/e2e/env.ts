@@ -18,3 +18,6 @@ export const MAILPIT_URL = process.env.E2E_MAILPIT_URL ?? "http://127.0.0.1:5432
 export const DB_CONNECTION =
   process.env.E2E_DB_CONNECTION ??
   "Host=127.0.0.1;Port=54322;Database=postgres;Username=postgres;Password=postgres";
+
+/** Service-role key of the LOCAL Supabase stack only (`SERVICE_ROLE_KEY` from `supabase status -o env`). */
+export const SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY ?? "";

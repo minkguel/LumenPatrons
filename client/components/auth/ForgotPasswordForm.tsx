@@ -45,7 +45,7 @@ export function ForgotPasswordForm() {
   }
 
   return (
-    <div className="w-full max-w-md bg-white border border-lumen-teal/15 rounded-xl p-6 shadow-sm">
+    <div className="w-full max-w-md bg-surface border border-lumen-teal/15 rounded-xl p-6 shadow-sm">
       <h1 className="text-xl font-semibold mb-4">Reset your password</h1>
       <form onSubmit={handleSubmit} className="space-y-4">
         <Input
@@ -61,7 +61,7 @@ export function ForgotPasswordForm() {
           </p>
         )}
         {error && (
-          <p className="text-sm text-red-500 bg-red-50 px-3 py-2 rounded-lg">{error}</p>
+          <p className="text-sm text-danger bg-danger-soft px-3 py-2 rounded-lg">{error}</p>
         )}
         <Button type="submit" className="w-full" disabled={pending}>
           {pending ? "Sending..." : "Send reset link"}

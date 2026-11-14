@@ -54,7 +54,7 @@ export function ResendButton({ email }: { email: string }) {
         <p
           role="status"
           className={`text-sm px-3 py-2 rounded-lg ${
-            message.isError ? "text-red-500 bg-red-50" : "text-green-600 bg-green-50"
+            message.isError ? "text-danger bg-danger-soft" : "text-success bg-success-soft"
           }`}
         >
           {message.text}

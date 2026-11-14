@@ -7,6 +7,7 @@ export type AuthUser = {
   email: string;
   fullName: string;
   userType: string;
+  isAdmin: boolean;
 };
 
 export type SignUpInput = {
@@ -22,6 +23,7 @@ function toAuthUser(user: User): AuthUser {
     email: user.email ?? "",
     fullName: user.user_metadata.full_name ?? user.email?.split("@")[0] ?? "User",
     userType: user.user_metadata.user_type ?? "Founder",
+    isAdmin: user.app_metadata?.role === "admin",
   };
 }
 

@@ -144,6 +144,30 @@ public sealed class AuthorizationTests : IClassFixture<SecurityWebApplicationFac
         Assert.Equal(HttpStatusCode.Created, response.StatusCode);
     }
 
+    [Fact]
+    public async Task Opportunity_response_includes_detail_fields()
+    {
+        var opportunityId = Guid.NewGuid();
+        await _factory.SeedAsync(db =>
+        {
+            var opportunity = Opportunity(opportunityId);
+            opportunity.Description = "Grants for early founders";
+            opportunity.Eligibility = "Registered Danish companies";
+            opportunity.EstimatedAmount = 250000m;
+            opportunity.Currency = "DKK";
+            db.Add(opportunity);
+            return Task.CompletedTask;
+        });
+        using var client = _factory.CreateClient(new() { AllowAutoRedirect = false });
+
+        var result = await client.GetFromJsonAsync<OpportunityDetails>(
+            $"/api/v1/fundingopportunities/{opportunityId}", TestContext.Current.CancellationToken);
+
+        Assert.Equal(
+            new OpportunityDetails("Grants for early founders", "Registered Danish companies", 250000m, "DKK", "Open"),
+            result);
+    }
+
     private static UserProfile Profile(Guid id) => new()
     {
         Id = id,
@@ -161,4 +185,7 @@ public sealed class AuthorizationTests : IClassFixture<SecurityWebApplicationFac
     };
 
     private sealed record SavedItem(Guid Id, string Status);
+
+    private sealed record OpportunityDetails(
+        string Description, string? Eligibility, decimal? EstimatedAmount, string? Currency, string Status);
 }

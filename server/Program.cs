@@ -1,6 +1,7 @@
 using LumenPatrons.Api.Auth;
 using LumenPatrons.Api.Data;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Diagnostics;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
@@ -15,12 +16,17 @@ var supabaseUrl = builder.Configuration["Supabase:Url"]?.TrimEnd('/')
 builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseNpgsql(builder.Configuration.GetConnectionString("SupabaseConnection")));
 
+var corsOrigins = builder.Configuration.GetSection("Cors:AllowedOrigins").Get<string[]>() ?? [];
+if (corsOrigins.Length == 0) corsOrigins = ["http://localhost:3000"];
+
+builder.Services.AddProblemDetails();
+
 builder.Services.AddCors(options =>
     {
         options.AddPolicy("AllowNextJs",
             policy =>
             {
-                policy.WithOrigins("http://localhost:3000")
+                policy.WithOrigins(corsOrigins)
                     .AllowAnyHeader()
                     .AllowAnyMethod();
             });
@@ -67,11 +73,22 @@ builder.Services.AddAuthorization(options =>
         }));
 });
 
+builder.Services.AddScoped<LumenPatrons.Api.Services.OpportunityImporter>();
+builder.Services.AddHttpClient<LumenPatrons.Api.Services.IAuthIdentityDeleter, LumenPatrons.Api.Services.SupabaseAuthAdmin>(
+    client => client.Timeout = TimeSpan.FromSeconds(10));
+
 builder.Services.AddControllers();
 
 
 var app = builder.Build();
 
+app.UseExceptionHandler(new ExceptionHandlerOptions
+{
+    StatusCodeSelector = exception => exception is UnauthorizedAccessException
+        ? StatusCodes.Status401Unauthorized
+        : StatusCodes.Status500InternalServerError
+});
+app.UseHttpsRedirection();
 app.UseCors("AllowNextJs");
 app.UseAuthentication();
 app.UseAuthorization();
@@ -90,8 +107,6 @@ app.MapGet("/api/v1/status", async (AppDbContext db) =>
         timestamp = DateTime.UtcNow
     };
 }).AllowAnonymous();
-
-app.UseHttpsRedirection();
 
 app.Run();
 

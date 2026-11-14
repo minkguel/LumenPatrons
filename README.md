@@ -137,6 +137,7 @@ Example environment variables (recommended)
   - `ConnectionStrings__SupabaseConnection` env var or update `server/appsettings.Development.json`:
     - `ConnectionStrings__SupabaseConnection="Host=...;Port=5432;Database=...;Username=...;Password=...;"`
   - `Supabase__Url` — same Supabase project URL, used for JWT issuer/JWKS validation
+  - `Supabase__ServiceRoleKey` — server-only secret that lets the API delete a user's login when they delete their account (Settings > Your data). Never expose it to the browser, never prefix it with `NEXT_PUBLIC_`, never commit it. If unset, account deletion answers 502 and removes nothing.
 
 Security note: do not commit production secrets to the repository. Use environment variables, a secrets store, or a local `.env` (gitignored).
 
@@ -157,6 +158,14 @@ Configure the hosted Supabase project (Dashboard) once:
 7. Authentication > JWT Keys: the hosted project must use **asymmetric JWT signing keys** (JWKS, e.g. ES256), not the legacy shared secret. The API validates tokens against `/auth/v1/.well-known/openid-configuration`, so verify the project publishes a key at `/auth/v1/.well-known/jwks.json` before deploying.
 
 `supabase/config.toml` mirrors these settings for the local Supabase CLI test stack.
+
+### Making an admin
+
+Admins can import and delete funding opportunities from the **Admin** page. Run this once in the Supabase SQL editor, then sign out and back in:
+
+```sql
+update auth.users set raw_app_meta_data = raw_app_meta_data || '{"role":"admin"}' where email = '<your email>';
+```
 
 ## Security tests
 
@@ -182,6 +191,7 @@ npx supabase start
 eval "$(npx supabase status -o env)"
 export NEXT_PUBLIC_SUPABASE_URL="$API_URL"
 export NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY="${PUBLISHABLE_KEY:-$ANON_KEY}"
+export SUPABASE_SERVICE_ROLE_KEY="$SERVICE_ROLE_KEY"   # local stack's key only, never a hosted one
 export ConnectionStrings__SupabaseConnection="Host=127.0.0.1;Port=54322;Database=postgres;Username=postgres;Password=postgres"
 (cd server && dotnet ef database update)
 cd client && npm run e2e
@@ -197,7 +207,6 @@ See the `e2e` job in `.github/workflows/security-tests.yml` for the exact CI ste
 ---
 
 ## Known issues & notes
-- Port mismatch: frontend client fallback API is `http://localhost:5083` while docker-compose maps server to host `5000`. Set `NEXT_PUBLIC_API_URL` to the actual backend URL.
 - `appsettings.Development.json` currently contains a connection string — treat that value as sensitive.
 - Apply the latest EF migration before using authenticated profile/saved-opportunity flows.
 - Enable Supabase Auth leaked-password protection before production.
@@ -206,10 +215,8 @@ See the `e2e` job in `.github/workflows/security-tests.yml` for the exact CI ste
 ---
 
 ## Recommended next steps (prioritized)
-1. Apply the `SecurityFoundation` migration and enable leaked-password protection in Supabase Auth.
-2. Wire Applications and Settings to the protected API endpoints.
-3. Create a small data ingestion pipeline to populate `FundingOpportunity` records.
-4. Add tests and basic CI; automate EF migrations in dev/CI.
+1. Enable leaked-password protection in Supabase Auth.
+2. Scrapers are run locally and are not part of the deployed product; data enters through Admin → Import.
 
 ---
 
@@ -219,7 +226,7 @@ See the `e2e` job in `.github/workflows/security-tests.yml` for the exact CI ste
   - Layout: `client/app/layout.tsx`
   - Home: `client/app/(app)/page.tsx`
   - Auth provider: `client/providers/AuthProvider.tsx`
-  - Mock auth: `client/lib/auth.ts`
+  - Auth helpers: `client/lib/auth.ts`
   - API client: `client/lib/api.ts`
   - UI components: `client/components/*`
 - Backend:

@@ -89,3 +89,14 @@ export async function updateMyProfile(input: { fullName: string; userType: strin
   if (!response.ok) throw new Error(`Failed to save profile (${response.status}).`);
   return response.json();
 }
+
+export async function exportMyData(): Promise<Blob> {
+  const response = await authorizedFetch(`${PROFILE_PATH}/export`);
+  if (!response.ok) throw new Error(`Failed to export your data (${response.status}).`);
+  return response.blob();
+}
+
+export async function deleteMyAccount(): Promise<void> {
+  const response = await authorizedFetch(PROFILE_PATH, { method: "DELETE" });
+  if (!response.ok) throw new Error(`Failed to delete account (${response.status}).`);
+}

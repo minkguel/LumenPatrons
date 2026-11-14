@@ -1,63 +1,83 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { Badge } from "@/components/ui/Badge";
-import { Card } from "@/components/ui/Card";
-import { getFundingOpportunities, type FundingOpportunity } from "@/lib/api";
+import { Suspense, useEffect, useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
+import { Button } from "@/components/ui/Button";
+import { DiscoverFilters } from "@/components/discover/DiscoverFilters";
+import { OpportunityCard } from "@/components/discover/OpportunityCard";
+import {
+  MAX_LIST_ROWS,
+  getCategories,
+  getFundingOpportunities,
+  getSavedOpportunities,
+  type FundingOpportunity,
+} from "@/lib/api";
+import { discoverQuery } from "@/lib/discover";
 
-function formatAmount(amount?: number | null) {
-  if (!amount && amount !== 0) return "—";
-  try {
-    return new Intl.NumberFormat("en-IE", {
-      style: "currency",
-      currency: "EUR",
-      maximumFractionDigits: 0,
-    }).format(Number(amount));
-  } catch {
-    return `€${amount}`;
-  }
-}
+function Discover() {
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const q = searchParams.get("q") ?? "";
+  const category = searchParams.get("category") ?? "";
 
-function daysUntil(iso?: string) {
-  if (!iso) return "No deadline";
-  const d = new Date(iso);
-  const now = new Date();
-  const diff = Math.ceil((d.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
-  if (isNaN(diff)) return "No deadline";
-  if (diff <= 0) return "Closed";
-  if (diff === 1) return "Closes in 1 day";
-  return `Closes in ${diff} days`;
-}
-
-export default function Home() {
-  const [patrons, setPatrons] = useState<FundingOpportunity[] | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const [retryKey, setRetryKey] = useState(0);
+  const requestKey = `${q}
+${category}
+${retryKey}`;
+  // The result remembers which request it answers, so "loading" is derived, not set in an effect.
+  const [result, setResult] = useState<{
+    key: string;
+    data: FundingOpportunity[] | null;
+  } | null>(null);
+  const [categories, setCategories] = useState<string[]>([]);
+  const [savedIds, setSavedIds] = useState<Set<string>>(new Set());
 
   useEffect(() => {
     let mounted = true;
-    getFundingOpportunities()
-      .then((data) => {
+    getSavedOpportunities()
+      .then((items) => {
         if (!mounted) return;
-        setPatrons(data);
+        setSavedIds(new Set(items.map((item) => item.opportunity.id)));
       })
       .catch((err) => {
+        // Discover still works without this; cards just start as unsaved.
         console.error(err);
-        if (!mounted) return;
-        setError("Failed to load funding opportunities");
-      })
-      .finally(() => {
-        if (!mounted) return;
-        setLoading(false);
       });
-
+    getCategories()
+      .then((names) => {
+        if (mounted) setCategories(names);
+      })
+      .catch((err) => {
+        // Discover still works without this; there are just no category buttons.
+        console.error(err);
+      });
     return () => {
       mounted = false;
     };
   }, []);
 
+  useEffect(() => {
+    let mounted = true;
+    getFundingOpportunities({ q, category })
+      .then((data) => {
+        if (mounted) setResult({ key: requestKey, data });
+      })
+      .catch((err) => {
+        console.error(err);
+        if (mounted) setResult({ key: requestKey, data: null });
+      });
+    return () => {
+      mounted = false;
+    };
+  }, [q, category, requestKey]);
+
+  const loading = result?.key !== requestKey;
+  const patrons = result?.data ?? null;
+  const error = !loading && result?.data === null;
+  const hasFilter = q !== "" || category !== "";
+
   return (
-    <div className="p-8">
+    <div className="p-4 md:p-8">
       <div className="max-w-5xl mx-auto">
         <h2 className="text-3xl font-bold text-foreground mb-2">
           Welcome to <span className="text-lumen-teal">Lumen</span>
@@ -67,43 +87,57 @@ export default function Home() {
           Find non-dilutive capital and institutional backing without the noise.
         </p>
 
+        <DiscoverFilters
+          categories={categories}
+          selected={category || undefined}
+          onSelect={(next) => router.push(`/${discoverQuery({ q, category: next })}`)}
+        />
+
         {loading ? (
           <div className="text-center text-foreground/55">Loading...</div>
         ) : error ? (
-          <div className="text-center text-red-600">{error}</div>
+          <div className="text-center text-danger space-y-3">
+            <p>Could not load funding opportunities.</p>
+            <Button variant="secondary" onClick={() => setRetryKey((k) => k + 1)}>
+              Try again
+            </Button>
+          </div>
         ) : patrons && patrons.length > 0 ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {patrons.map((patron) => (
-              <Card key={patron.id} hover>
-                <div className="flex justify-between items-start mb-4">
-                  <Badge>{patron.category?.length ? patron.category.join(", ") : "General"}</Badge>
-                  <span className="text-foreground/40 text-sm group-hover:text-patron-gold transition-colors">
-                    Grant
-                  </span>
-                </div>
-                <h3 className="text-lg font-bold text-foreground mb-1">
-                  {patron.title}
-                </h3>
-                <p className="text-sm text-foreground/55 mb-4 line-clamp-2">
-                  {patron.patronName}
-                </p>
-                <div className="flex justify-between items-center text-sm border-t border-lumen-teal/10 pt-4">
-                  <span className="text-patron-gold font-semibold">
-                    {formatAmount(patron.minimumAmount)}
-                  </span>
-                  <span className="text-foreground/40">
-                    {daysUntil(patron.deadline)}
-                  </span>
-                </div>
-              </Card>
-            ))}
+          <div className="space-y-4">
+            {patrons.length === MAX_LIST_ROWS && (
+              <p className="text-sm text-foreground/55">
+                Showing the first {MAX_LIST_ROWS}. Search to narrow down.
+              </p>
+            )}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {patrons.map((patron) => (
+                <OpportunityCard
+                  key={patron.id}
+                  opportunity={patron}
+                  alreadySaved={savedIds.has(patron.id)}
+                />
+              ))}
+            </div>
+          </div>
+        ) : hasFilter ? (
+          <div className="text-center text-foreground/55 space-y-3">
+            <p>Nothing matches your search.</p>
+            <Button variant="secondary" onClick={() => router.push("/")}>
+              Clear search
+            </Button>
           </div>
         ) : (
-          <div className="text-center text-foreground/55">
-            No funding opportunities found.
-          </div>
+          <div className="text-center text-foreground/55">No funding opportunities yet.</div>
         )}
       </div>
     </div>
+  );
+}
+
+export default function Home() {
+  return (
+    <Suspense fallback={<div className="p-4 md:p-8 text-center text-foreground/55">Loading...</div>}>
+      <Discover />
+    </Suspense>
   );
 }
